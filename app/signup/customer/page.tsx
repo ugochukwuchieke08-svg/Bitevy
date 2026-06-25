@@ -1,0 +1,303 @@
+"use client";
+
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faTruck,
+  faUtensils,
+  faStar,
+  faEyeSlash,
+   faEye
+} from "@fortawesome/free-solid-svg-icons";
+import { useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+
+
+export default function SignupPage() {
+
+
+  const router = useRouter();
+
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+
+  async function handleSignup(){
+
+
+    setLoading(true);
+
+
+    const { error } = await supabase.auth.signUp({
+
+      email,
+      password,
+
+    });
+
+
+
+    if(error){
+
+      alert(error.message);
+      setLoading(false);
+      return;
+
+    }
+
+
+
+    alert("Account created!");
+
+    router.push("/login");
+
+
+  }
+
+
+
+
+  return (
+
+    <main
+
+      className="min-h-screen flex items-center justify-center p-5 bg-cover bg-center relative"
+
+      style={{
+        backgroundImage:"url('/images/login.png')"
+      }}
+
+    >
+
+
+      {/* dark overlay */}
+
+      <div className="absolute inset-0 bg-black/60"></div>
+
+
+
+      <div className="relative z-10 w-full max-w-md">
+
+
+
+        {/* Branding */}
+
+
+        <div className="text-center mb-8">
+
+
+          <div className="flex justify-center">
+
+            <Image
+
+              src="/images/Bitevy.png"
+
+              alt="Bitevy"
+
+              width={170}
+
+              height={60}
+
+            />
+
+          </div>
+
+
+
+          <h1 className="text-white text-4xl font-black mt-5">
+
+            Join Bitevy 🍽️
+
+          </h1>
+
+
+
+          <p className="text-white/80 mt-2">
+
+           
+
+          </p>
+
+
+
+        </div>
+
+
+
+
+
+        {/* Signup Card */}
+
+
+        <div className="bg-white/95 backdrop-blur rounded-[35px] shadow-2xl p-7">
+
+
+          <h2 className="text-center text-2xl font-black text-gray-900 mb-6">
+
+            Create Account
+
+          </h2>
+
+
+
+
+          <div className="space-y-4">
+
+
+
+            <input
+
+              placeholder="Email address"
+
+              value={email}
+
+              onChange={(e)=>setEmail(e.target.value)}
+
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 text-black outline-none focus:border-green-700"
+
+            />
+
+
+
+
+           <div className="relative">
+
+              <input
+                placeholder="Create password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 pr-12 text-black outline-none focus:border-green-700"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                <FontAwesomeIcon
+                  icon={showPassword ? faEyeSlash : faEye}
+                />
+              </button>
+
+            </div>
+
+
+
+
+
+            <button
+
+              onClick={handleSignup}
+
+              className="w-full bg-green-700 hover:bg-green-800 text-white py-4 rounded-2xl font-bold text-lg shadow-lg"
+
+            >
+
+              {loading ? "Creating Account..." : "Sign Up"}
+
+            </button>
+
+
+
+          </div>
+
+
+
+
+
+          <p className="text-gray-600 text-center mt-6">
+
+
+            Already have an account?
+
+
+            <Link
+
+              href="/login"
+
+              className="text-green-700 font-bold ml-2"
+
+            >
+
+              Login
+
+            </Link>
+
+
+          </p>
+
+
+
+        </div>
+
+
+
+
+
+        {/* Bottom features */}
+
+
+        <div className="grid grid-cols-3 text-center text-white mt-8 text-sm">
+
+
+  <div className="flex flex-col items-center">
+
+    <FontAwesomeIcon
+      icon={faTruck}
+      className="text-2xl mb-2"
+    />
+
+    <p>
+      Fast Delivery
+    </p>
+
+  </div>
+
+
+
+
+  <div className="flex flex-col items-center">
+
+    <FontAwesomeIcon
+      icon={faUtensils}
+      className="text-2xl mb-2"
+    />
+
+    <p>
+      Fresh Meals
+    </p>
+
+  </div>
+
+
+
+
+  <div className="flex flex-col items-center">
+
+    <FontAwesomeIcon
+      icon={faStar}
+      className="text-2xl mb-2"
+    />
+
+    <p>
+      Best Taste
+    </p>
+
+  </div>
+
+
+</div>
+
+</div>
+    </main>
+
+  );
+
+}
