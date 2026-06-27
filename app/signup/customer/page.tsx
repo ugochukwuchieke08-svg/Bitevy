@@ -247,7 +247,7 @@ export default function SignupPage() {
         <div className="grid grid-cols-3 text-center text-white mt-8 text-sm">
 
 
-  <div className="flex flex-col items-center">
+  <Link href="/signup/rider" className="flex flex-col items-center">
 
     <FontAwesomeIcon
       icon={faTruck}
@@ -255,15 +255,15 @@ export default function SignupPage() {
     />
 
     <p>
-      Fast Delivery
+      Become a Rider
     </p>
 
-  </div>
+  </Link>
 
 
 
 
-  <div className="flex flex-col items-center">
+  <Link href="/signup/restaurants" className="flex flex-col items-center">
 
     <FontAwesomeIcon
       icon={faUtensils}
@@ -271,10 +271,10 @@ export default function SignupPage() {
     />
 
     <p>
-      Fresh Meals
+      Become Restaurant
     </p>
 
-  </div>
+  </Link>
 
 
 

@@ -113,10 +113,12 @@ export default async function RestaurantPage({
                 </p>
 
 
-            <AddToCartButton
+   <AddToCartButton
   name={item.name}
   price={item.price}
   image={item.image}
+  restaurantId={restaurant.id}
+  restaurantName={restaurant.name}
 />
 
               </div>

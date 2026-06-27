@@ -5,17 +5,10 @@ import { useCartStore } from "@/store/cartStore";
 
 
 type Props = {
-  name: string;
-  price: number;
-  image: string;
+  food: any;
 };
 
-
-export default function AddToCartButton({
-  name,
-  price,
-  image,
-}: Props) {
+export default function AddToCartButton({ food }: Props) {
 
   const addToCart = useCartStore(
     (state) => state.addToCart
@@ -27,11 +20,13 @@ export default function AddToCartButton({
 
   function handleAdd() {
 
-   addToCart({
-  name,
-  price,
-  image,
+ addToCart({
+  name: food.name,
+  price: food.price,
+  image: food.image,
   quantity: 1,
+  restaurant_id: food.restaurant_id,
+  restaurant_name: food.restaurants?.name,
 });
 
 
@@ -60,7 +55,7 @@ export default function AddToCartButton({
 
         <div className="fixed bottom-5 left-5 right-5 bg-green-700 text-white rounded-full py-3 text-center font-bold z-50">
 
-          {name} added to cart
+          {food.name} added to cart
 
         </div>
 

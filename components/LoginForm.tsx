@@ -188,7 +188,7 @@ export default function LoginPage() {
 
 
             <Link
-              href="/signup"
+              href="/signup/customer"
               className="text-green-700 font-bold ml-2"
             >
               Sign up
@@ -209,7 +209,7 @@ export default function LoginPage() {
        <div className="grid grid-cols-3 text-center text-white mt-8 text-sm">
 
 
-  <div className="flex flex-col items-center">
+  <Link href="signup/rider" className="flex flex-col items-center">
 
     <FontAwesomeIcon
       icon={faTruck}
@@ -217,15 +217,15 @@ export default function LoginPage() {
     />
 
     <p>
-      Fast Delivery
+      Become a Rider
     </p>
 
-  </div>
+  </Link>
 
 
 
 
-  <div className="flex flex-col items-center">
+  <Link href="signup/restaurants" className="flex flex-col items-center">
 
     <FontAwesomeIcon
       icon={faUtensils}
@@ -233,10 +233,10 @@ export default function LoginPage() {
     />
 
     <p>
-      Fresh Meals
+      Become a Restaurant
     </p>
 
-  </div>
+  </Link>
 
 
 

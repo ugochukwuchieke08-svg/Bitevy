@@ -28,7 +28,7 @@ return ( <div className="relative">
 
   <button
     onClick={() => setShowMenu(!showMenu)}
-    className="w-10 h-10 rounded-full flex items-center justify-center"
+    className="w-20 h-10 rounded-full flex items-center justify-center"
   >
     <FontAwesomeIcon
       icon={faEllipsisVertical}
@@ -55,7 +55,7 @@ return ( <div className="relative">
       </Link>
 
       <Link
-        href="/rider-signup"
+        href="/signup/rider"
         className="block px-5 py-4 border-b text-black"
       >
         Become a Rider

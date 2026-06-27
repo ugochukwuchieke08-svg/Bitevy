@@ -16,7 +16,7 @@ export default function CartButton() {
   return (
     <Link
       href="/cart"
-      className="relative bg text-black -mr-60 rounded-full p-3"
+      className="relative bg text-black -mr-50 rounded-full p-3"
     >
       <FontAwesomeIcon
         icon={faCartShopping}

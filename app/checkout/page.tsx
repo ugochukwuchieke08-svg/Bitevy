@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
-import { useOrderStore } from "@/store/orderStore";
+import { useEffect } from "react";
+
 
 export default function CheckoutPage() {
   const cart = useCartStore((state) => state.cart);
@@ -19,22 +20,50 @@ export default function CheckoutPage() {
     (state) => state.clearCart
   );
 
-  const addOrder = useOrderStore(
-  (state) => state.addOrder
-  );
+  
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
+ 
+    useEffect(() => {
+    async function loadProfile() {
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, address")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile) return;
+
+      setName(profile.full_name || "");
+      setPhone(profile.phone || "");
+      setAddress(profile.address || "");
+    }
+
+    loadProfile();
+  }, []);
 
  const handleOrder = async () => {
 
-  if (!name || !phone || !address) {
-    alert("Please fill all required fields");
-    return;
-  }
+  if (loading) return;
+
+  setLoading(true);
+
+ if (!name || !phone || !address) {
+  alert("Please fill all required fields");
+  setLoading(false);
+  return;
+}
 
 
   const {
@@ -45,31 +74,40 @@ export default function CheckoutPage() {
 
 
   if (!user) {
-    alert("Please login first");
-    router.push("/login");
-    return;
-  }
+  alert("Please login first");
+  setLoading(false);
+  router.push("/login");
+  return;
+}
 
-  
-  const { data: order, error } = await supabase
-    
-    .from("orders")
-    .insert({
-      user_id: user.id,
-      total: total,
-      status: "pending",
-      customer_name: name,
-      phone: phone,
-      delivery_address: address,
-      note: note,
-    })
-    .select()
-    .single();
+  const restaurantId = cart[0]?.restaurant_id;
+  console.log(cart);
+
+ if (cart.length === 0) {
+  alert("Cart is empty");
+  setLoading(false);
+  return;
+}
+ const { data: order, error } = await supabase
+  .from("orders")
+  .insert({
+    user_id: user.id,
+    restaurant_id: restaurantId,
+    total,
+    status: "pending",
+    customer_name: name,
+    phone,
+    delivery_address: address,
+    note,
+  })
+  .select()
+  .single();
 
 
   if(error){
     console.log(error);
     alert("Order failed");
+    setLoading(false);
     return;
   }
 
@@ -94,10 +132,19 @@ export default function CheckoutPage() {
   if(itemError){
     console.log(itemError);
     alert("Items failed");
+    setLoading(false);
     return;
   }
 
 
+  await supabase
+  .from("profiles")
+  .update({
+    full_name: name,
+    phone,
+    address,
+  })
+  .eq("id", user.id);
 
   clearCart();
 
@@ -169,7 +216,7 @@ export default function CheckoutPage() {
               : "bg-green-700"
           }`}
         >
-          {loading ? "Taking Order..." : "Place Order"}
+          {loading ? "Placing Order..." : "Place Order"}
         </button>
 
       </div>

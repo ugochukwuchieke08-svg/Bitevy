@@ -6,6 +6,8 @@ type CartItem = {
   price: number;
   image: string;
   quantity: number;
+  restaurant_id: number;
+  restaurant_name: string;
 };
 
 type CartStore = {
@@ -24,6 +26,18 @@ export const useCartStore = create<CartStore>()(
 
       addToCart: (item) =>
         set((state) => {
+
+          if (
+            state.cart.length > 0 &&
+            state.cart[0].restaurant_id !== item.restaurant_id
+          ) {
+            alert(
+              "You can only order from one restaurant at a time"
+            );
+
+            return state;
+          }
+
           const existingItem = state.cart.find(
             (cartItem) => cartItem.name === item.name
           );

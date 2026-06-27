@@ -4,21 +4,23 @@ import { supabase } from "@/lib/supabase";
 import CartButton from "@/components/CartButton";
 import BottomNav from "@/components/BottomNav";
 import HomeMenu from "@/components/HomeMenu";
+import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import Image from "next/image";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faStar,
+  faClock,
+  faMotorcycle,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default async function Home() {
-  const categories = [
-    "🍔 Fast Food",
-    "🍚 Nigerian",
-    "🍗 Chicken",
-    "🍕 Pizza",
-    "🥤 Drinks",
-    "🍰 Snacks",
-  ];
+const { data: categories } = await supabase
+  .from("categories")
+  .select("*")
+  .order("id");
 
 
 
@@ -44,21 +46,20 @@ if (user) {
 
 console.log(error);
    
-  const foods = [
-    {
-      name: "Jollof Rice & Chicken",
-      price: "₦3500",
-      image:
-        "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800",
-    },
-    {
-      name: "Shawarma",
-      price: "₦2500",
-      image:
-        "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=800",
-    },
-  ];
+const { data: foods } = await supabase
+  .from("menu_items")
+  .select(`
+    *,
+    restaurants (
+      name
+    )
+  `)
+  .limit(20);
 
+console.log("Foods:", foods);
+console.log("Error:", error);
+   console.log("Foods:", foods);
+console.log("Error:", error);
   return (
 
 
@@ -84,16 +85,20 @@ console.log(error);
       />
       
     </div>
-    
- <CartButton />
+    <div className="ml-50">
+<CartButton />
+    </div>
+ 
+<div className="-mr-10">
 <HomeMenu />
+</div>
   </div>
  
  <UserGreeting />
 
   <Link href="/search">
   <div
-    className="mt-4 w-full rounded-full bg-gray-100 px-5 py-3 border border-green-700 text-gray-500"
+    className="mt-4 w-full rounded-full bg-gray-100 px-5 py-3 shadow  text-gray-500"
   >
     <FontAwesomeIcon 
       icon={faMagnifyingGlass} 
@@ -107,24 +112,43 @@ console.log(error);
 
 
       {/* Categories */}
-      <section className="px-5 mt-6">
+     <section className="px-5 mt-6">
 
-        <h2 className="font-bold text-xl mb-3 text-gray-900">
-          Categories
-        </h2>
+  <h2 className="font-bold text-xl mb-4 text-gray-900">
+    Categories
+  </h2>
 
-        <div className="flex gap-3 overflow-x-auto">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className="bg-white px-5 py-3 rounded-full text-gray-900 shadow-sm whitespace-nowrap text-sm font-medium"
-            >
-              {category}
-            </button>
-          ))}
+  <div className="flex gap-4 overflow-x-auto pb-3 whitespace-nowrap scrollbar-hide">
+
+    {categories?.map((category) => (
+
+      <Link
+        key={category.id}
+        href={`/category/${category.id}`}
+        className="flex-shrink-0 flex flex-col items-center"
+      >
+
+        <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-md border border-gray-200">
+
+          <img
+            src={category.image}
+            alt={category.name}
+            className="w-full h-full object-cover"
+          />
+
         </div>
 
-      </section>
+        <p className="mt-2 text-sm font-semibold text-gray-800 text-center">
+          {category.name}
+        </p>
+
+      </Link>
+
+    ))}
+
+  </div>
+
+</section>
 
 
       {/* Restaurants */}
@@ -165,21 +189,39 @@ console.log(error);
                 </h3>
 
 
-                <div className="flex gap-3 text-sm text-gray-600 mt-2">
+               <div className="flex items-center gap-5 mt-3 text-sm text-gray-600">
 
-                  <span>
-                    ⭐ {restaurant.rating}
-                  </span>
+  <div className="flex items-center gap-2">
+    <FontAwesomeIcon
+      icon={faStar}
+      className="text-yellow-500"
+    />
+    <span className="font-medium">
+      {restaurant.rating}
+    </span>
+  </div>
 
-                  <span>
-                    🕒 {restaurant.time}
-                  </span>
+  <div className="flex items-center gap-2">
+    <FontAwesomeIcon
+      icon={faClock}
+      className="text-orange-500"
+    />
+    <span className="font-medium">
+      {restaurant.time}
+    </span>
+  </div>
 
-                  <span>
-                    🚚 {restaurant.delivery}
-                  </span>
+  <div className="flex items-center gap-2">
+    <FontAwesomeIcon
+      icon={faMotorcycle}
+      className="text-green-600"
+    />
+    <span className="font-medium">
+      {restaurant.delivery}
+    </span>
+  </div>
 
-                </div>
+</div>
 
               </div>
 
@@ -217,46 +259,57 @@ console.log(error);
 
 
       {/* Food Recommendations */}
-      <section className="px-5 mt-8">
+      {/* Recommended */}
+<section className="px-5 mt-8">
 
-        <h2 className="font-bold text-xl text-gray-900">
-          Recommended
-        </h2>
+  <div className="flex justify-between items-center mb-4">
 
+    <h2 className="font-bold text-xl text-gray-900">
+      Recommended For You
+    </h2>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+    <Link
+      href="/foods"
+      className="text-orange-600 font-semibold"
+    >
+      See all
+    </Link>
 
-          {foods.map((food)=>(
-            <div
-              key={food.name}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm"
-            >
+  </div>
 
-              <img
-                src={food.image}
-                className="h-32 w-full object-cover"
-                alt={food.name}
-              />
+  <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
 
+    {foods?.map((food) => (
+  <Link
+    key={food.id}
+    href={`/foods/${food.id}`}
+    className="min-w-[220px] bg-white rounded-3xl overflow-hidden shadow-md flex-shrink-0"
+  >
+    <img
+      src={food.image}
+      alt={food.name}
+      className="w-full h-40 object-cover"
+    />
 
-              <div className="p-3">
+    <div className="p-4">
+      <p className="font-bold text-black">
+        {food.name}
+      </p>
 
-                <h3 className="font-bold text-gray-900">
-                  {food.name}
-                </h3>
+      <p className="text-orange-600 font-bold mt-2">
+        ₦{food.price.toLocaleString()}
+      </p>
 
-                <p className="text-orange-600 font-bold mt-2">
-                  {food.price}
-                </p>
+      <div className="mt-3">
+        <AddToCartButton food={food} />
+      </div>
+    </div>
+  </Link>
+))}
 
-              </div>
+  </div>
 
-            </div>
-          ))}
-
-        </div>
-
-      </section>
+</section>
 
 
 

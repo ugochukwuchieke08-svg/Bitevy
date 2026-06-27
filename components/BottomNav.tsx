@@ -14,7 +14,7 @@ export default function BottomNav() {
 
   return (
 
-    <nav className="fixed bottom-0 left-0 right-0 bg-orange-500 border-t shadow-lg flex justify-around py-3">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-around py-3">
 
       <Link
         href="/"
@@ -29,7 +29,7 @@ export default function BottomNav() {
 
       <Link
         href="/search"
-        className="flex flex-col items-center text-gray"
+        className="flex flex-col items-center text-black"
       >
         <FontAwesomeIcon icon={faMagnifyingGlass} />
         <span className="text-[8px] mt-1">
@@ -40,7 +40,7 @@ export default function BottomNav() {
 
       <Link
         href="/orders"
-        className="flex flex-col items-center text-gray"
+        className="flex flex-col items-center text-black"
       >
         <FontAwesomeIcon icon={faBox} />
         <span className="text-[8px] mt-1">
@@ -49,7 +49,7 @@ export default function BottomNav() {
       </Link>
 
 
-      <Link href="/account" className="flex flex-col items-center text-gray">
+      <Link href="/account" className="flex flex-col items-center text-black">
         <FontAwesomeIcon icon={faUser} />
         <span className="text-[8px] mt-1">
           Profile

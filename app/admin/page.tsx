@@ -69,7 +69,19 @@ export default function AdminPage() {
 
         .from("orders")
 
-        .select("*")
+        .select(`
+    *,
+    restaurants (
+      id,
+      name
+    ),
+    order_items (
+      name,
+      quantity,
+      price,
+      image
+    )
+  `)
 
         .order("created_at", {
           ascending:false
@@ -157,8 +169,6 @@ export default function AdminPage() {
     );
 
   }
-
-
 
 
 
@@ -260,10 +270,40 @@ export default function AdminPage() {
 
                 </p>
 
-
               </div>
 
+<div className="mt-4">
+  <h3 className="font-bold text-black mb-2">
+    Items
+  </h3>
 
+  {order.order_items?.map((item:any) => (
+
+    <div
+      key={item.name}
+      className="flex justify-between border-b py-2"
+    >
+      <div>
+        <p className="font-semibold text-black">
+          {item.name}
+        </p>
+
+        <p className="text-gray-500 text-sm">
+          Qty: {item.quantity}
+        </p>
+      </div>
+
+      <p className="font-bold text-green-700">
+        ₦{item.price}
+      </p>
+
+      <p className="font-bold text-orange-600">
+        🍽️ {order.restaurants?.name}
+      </p>
+    </div>
+
+  ))}
+</div>
 
 
 
