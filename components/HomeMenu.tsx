@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
@@ -28,7 +28,7 @@ return ( <div className="relative">
 
   <button
     onClick={() => setShowMenu(!showMenu)}
-    className="w-20 h-10 rounded-full flex items-center justify-center"
+   className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
   >
     <FontAwesomeIcon
       icon={faEllipsisVertical}
@@ -62,10 +62,17 @@ return ( <div className="relative">
       </Link>
 
       <Link
-        href="/restaurant-signup"
+        href="/rider"
         className="block px-5 py-4 border-b text-black"
       >
-        Partner Restaurant
+         Rider Dashboard
+      </Link>
+
+      <Link
+        href="/restaurant/dashboard"
+        className="block px-5 py-4 border-b text-black"
+      >
+        My Restaurant
       </Link>
 
       <button

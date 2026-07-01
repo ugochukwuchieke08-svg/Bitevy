@@ -11,7 +11,7 @@ import {
    faEye
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";

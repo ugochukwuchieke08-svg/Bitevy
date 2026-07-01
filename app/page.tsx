@@ -1,13 +1,13 @@
 import UserGreeting from "@/components/UserGreeting";
 import RedirectIfNotLoggedIn from "@/components/RedirectIfNotLoggedIn";
-import { supabase } from "@/lib/supabase";
+
 import CartButton from "@/components/CartButton";
 import BottomNav from "@/components/BottomNav";
 import HomeMenu from "@/components/HomeMenu";
 import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import Image from "next/image";
-
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -17,34 +17,42 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default async function Home() {
+
+const supabase = await createServerSupabaseClient();
+
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+console.log("USER:", user);
+
 const { data: categories } = await supabase
   .from("categories")
   .select("*")
   .order("id");
 
 
-
 const { data: restaurants, error } = await supabase
   .from("restaurants")
   .select("*");
 
-const {
-  data: { user },
-} = await supabase.auth.getUser();
 
+console.log("User ID:", user?.id);
 let profile = null;
 
 if (user) {
-  const { data } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
+ const { data } = await supabase
+  .from("profiles")
+  .select("full_name, role")
+  .eq("id", user.id)
+  .single();
 
-  profile = data;
+console.log("PROFILE:", data);
+
+profile = data;
 }  
 
-console.log(error);
+
    
 const { data: foods } = await supabase
   .from("menu_items")
@@ -69,44 +77,33 @@ console.log("Error:", error);
 
 
       {/* Top App Bar */}
-     <header className="bg-[#fff8f0] sticky top-0 z-10  px-5 py-3">
+     <header className="sticky top-0 z-10 bg-[#fff8f0] px-5 py-3">
 
-  <div className="flex justify-between items-center">
+  <div className="flex items-center justify-between">
 
-    <div className="flex flex-col">
     <Image
-        src="/images/Bitevy.png"
-        alt="Bitevy logo"
-        width={130}
-        height={40}
-        
-        className="-mt-0 -ml-4"
+      src="/images/Bitevy.png"
+      alt="Bitevy logo"
+      width={130}
+      height={40}
+      className="-ml-4"
+    />
 
-      />
-      
+    <div className="flex items-center gap-3">
+      <CartButton />
+      <HomeMenu />
     </div>
-    <div className="ml-50">
-<CartButton />
-    </div>
- 
-<div className="-mr-10">
-<HomeMenu />
-</div>
+
   </div>
- 
- <UserGreeting />
+
+  <UserGreeting />
 
   <Link href="/search">
-  <div
-    className="mt-4 w-full rounded-full bg-gray-100 px-5 py-3 shadow  text-gray-500"
-  >
-    <FontAwesomeIcon 
-      icon={faMagnifyingGlass} 
-      className="text-sm"
-    />
-    Search food or restaurants...
-  </div>
-</Link>
+    <div className="mt-4 flex items-center gap-3 rounded-full bg-gray-100 px-5 py-3 shadow text-gray-500">
+      <FontAwesomeIcon icon={faMagnifyingGlass} />
+      <span>Search food or restaurants...</span>
+    </div>
+  </Link>
 
 </header>
 
@@ -117,6 +114,7 @@ console.log("Error:", error);
   <h2 className="font-bold text-xl mb-4 text-gray-900">
     Categories
   </h2>
+   
 
   <div className="flex gap-4 overflow-x-auto pb-3 whitespace-nowrap scrollbar-hide">
 
