@@ -3,15 +3,14 @@ import AddToCartButton from "@/components/AddToCartButton";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import Link from "next/link";
 
-const supabase = await createServerSupabaseClient();
 export default async function RestaurantPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const supabase = await createServerSupabaseClient(); // ✅ Move here
 
   const { id } = await params;
-
 
   const { data: restaurant } = await supabase
     .from("restaurants")
@@ -19,12 +18,10 @@ export default async function RestaurantPage({
     .eq("id", id)
     .single();
 
-
   const { data: menuItems } = await supabase
     .from("menu_items")
     .select("*")
     .eq("restaurant_id", id);
-
 
   if (!restaurant) {
     return (
