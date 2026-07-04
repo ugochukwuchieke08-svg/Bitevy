@@ -6,7 +6,16 @@ export default async function NotificationsPage() {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser(); 
+  
+  await supabase
+  .from("notifications")
+  .update({
+    read: true,
+  })
+  .eq("read", false);
+
+  console.log("Logged in user:",user?.id);
 
   if (!user) {
     return <h1>Please login.</h1>;
@@ -17,6 +26,8 @@ export default async function NotificationsPage() {
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+    console.log("Notifications:", notifications);
 
   return (
     <main className="min-h-screen bg-[#fff8f0] p-5">
