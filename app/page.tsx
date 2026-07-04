@@ -185,41 +185,46 @@ console.log("Error:", error);
                 <h3 className="font-bold text-xl text-gray-900">
                   {restaurant.name}
                 </h3>
-
+                   
+                   {!restaurant.is_open && (
+                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      Closed
+                    </span>
+                  )}
 
                <div className="flex items-center gap-5 mt-3 text-sm text-gray-600">
 
-  <div className="flex items-center gap-2">
-    <FontAwesomeIcon
-      icon={faStar}
-      className="text-yellow-500"
-    />
-    <span className="font-medium">
-      {restaurant.rating}
-    </span>
-  </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={faStar}
+                  className="text-yellow-500"
+                />
+                <span className="font-medium">
+                  {restaurant.rating}
+                </span>
+              </div>
 
-  <div className="flex items-center gap-2">
-    <FontAwesomeIcon
-      icon={faClock}
-      className="text-orange-500"
-    />
-    <span className="font-medium">
-      {restaurant.time}
-    </span>
-  </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={faClock}
+                  className="text-orange-500"
+                />
+                <span className="font-medium">
+                  {restaurant.time}
+                </span>
+              </div>
 
-  <div className="flex items-center gap-2">
-    <FontAwesomeIcon
-      icon={faMotorcycle}
-      className="text-green-600"
-    />
-    <span className="font-medium">
-      {restaurant.delivery}
-    </span>
-  </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={faMotorcycle}
+                  className="text-green-600"
+                />
+                <span className="font-medium">
+                  {restaurant.delivery}
+                </span>
+              </div>
 
-</div>
+            </div>
 
               </div>
 

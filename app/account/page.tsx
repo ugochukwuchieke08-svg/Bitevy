@@ -4,26 +4,31 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-
+import { useAuth } from "@/context/AuthContext";
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+  
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
+  const { user, loading: authLoading } = useAuth();
+  if (authLoading) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      Loading...
+    </main>
+  );
+}
   console.log("PROFILE DATA:", profile);
   useEffect(() => {
     async function getProfile() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      
 
       if (!user) {
         setLoading(false);
         return;
       }
 
-      setUser(user);
+      
 const { data: profile, error } = await supabase
   .from("profiles")
   .select("*")
@@ -40,7 +45,7 @@ setLoading(false);
     }
 
     getProfile();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return <div className="p-5">Loading...</div>;

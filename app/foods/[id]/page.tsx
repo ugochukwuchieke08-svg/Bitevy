@@ -20,7 +20,8 @@ export default async function FoodPage({
         image,
         rating,
         delivery,
-        time
+        time,
+        is_open
       )
     `)
     .eq("id", id)
@@ -95,7 +96,16 @@ export default async function FoodPage({
 
           </div>
 
-          <AddToCartButton food={food} />
+          {food.restaurants?.is_open ? (
+            <AddToCartButton food={food} />
+          ) : (
+            <button
+              disabled
+              className="w-full bg-gray-400 text-white py-4 rounded-2xl font-bold cursor-not-allowed"
+            >
+              Restaurant Closed
+            </button>
+          )}
 
         </div>
 

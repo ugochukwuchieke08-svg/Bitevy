@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 export default function RestaurantSignupPage() {
   const router = useRouter();
 
@@ -13,11 +13,16 @@ export default function RestaurantSignupPage() {
 
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
-
+  const { user, loading: authLoading } = useAuth();
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        Loading...
+      </main>
+    );
+  }
   async function handleSubmit() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  
 
     if (!user) {
       alert("Please login.");
@@ -68,7 +73,7 @@ export default function RestaurantSignupPage() {
 
     alert("Restaurant created!");
 
-    router.push("/restaurant");
+    router.push("/restaurant/dashboard");
   }
 
   return (

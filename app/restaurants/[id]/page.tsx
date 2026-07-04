@@ -51,7 +51,12 @@ export default async function RestaurantPage({
           Back
         </Link>
       </div>
-
+       
+       {!restaurant.is_open && (
+        <div className="bg-red-100 border border-red-300 text-red-700 rounded-2xl p-4 mb-6 text-center font-semibold">
+          🚫 This restaurant is currently closed.
+        </div>
+      )}
       <section className="bg-white rounded-t-3xl -mt-6 relative p-6">
 
         <h1 className="text-3xl text-black font-bold">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
+import { useAuth } from "@/context/AuthContext";
 
 export default function CheckoutPage() {
   const cart = useCartStore((state) => state.cart);
@@ -15,10 +15,20 @@ export default function CheckoutPage() {
   );
 
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      Loading...
+    </main>
+  );
+}
 
   const clearCart = useCartStore(
     (state) => state.clearCart
   );
+
 
   
 
@@ -28,30 +38,25 @@ export default function CheckoutPage() {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
  
-    useEffect(() => {
-    async function loadProfile() {
+   useEffect(() => {
+  async function loadProfile() {
+    if (!user) return;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, phone, address")
+      .eq("id", user.id)
+      .single();
 
-      if (!user) return;
+    if (!profile) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, phone, address")
-        .eq("id", user.id)
-        .single();
+    setName(profile.full_name || "");
+    setPhone(profile.phone || "");
+    setAddress(profile.address || "");
+  }
 
-      if (!profile) return;
-
-      setName(profile.full_name || "");
-      setPhone(profile.phone || "");
-      setAddress(profile.address || "");
-    }
-
-    loadProfile();
-  }, []);
+  loadProfile();
+}, [user]);
 
  const handleOrder = async () => {
 
@@ -64,13 +69,6 @@ export default function CheckoutPage() {
   setLoading(false);
   return;
 }
-
-
-  const {
-    data: {
-      user
-    }
-  } = await supabase.auth.getUser();
 
 
   if (!user) {
@@ -88,6 +86,20 @@ export default function CheckoutPage() {
   setLoading(false);
   return;
 }
+
+const { data: restaurant } = await supabase
+  .from("restaurants")
+  .select("owner_id, is_open")
+  .eq("id", restaurantId)
+  .single();
+
+if (!restaurant?.is_open) {
+  alert("Sorry, this restaurant is currently closed.");
+  return;
+}
+
+
+
  const { data: order, error } = await supabase
   .from("orders")
   .insert({
@@ -102,6 +114,25 @@ export default function CheckoutPage() {
   })
   .select()
   .single();
+
+
+if (error || !order) {
+  console.log(error);
+  alert("Order failed");
+  setLoading(false);
+  return;
+}
+
+await supabase.from("notifications").insert({
+  user_id: restaurant.owner_id,
+  order_id: order.id,
+  title: "New Order",
+  message: `${name} placed a new order.`,
+  link: `/restaurant/orders/${order.id}`,
+});
+
+ 
+
 
 
   if(error){

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+
 
   type Category = {
   id: number;
@@ -15,11 +17,21 @@ export default function AddFoodPage() {
  const [categories, setCategories] = useState<Category[]>([]);
 
   const [name, setName] = useState("");
-  
+  const [saving, setSaving] = useState(false);
   const [price, setPrice] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  
+ const { user, loading: authLoading } = useAuth();
+
+if (authLoading) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      Loading...
+    </main>
+  );
+} 
   
 
   useEffect(() => {
@@ -36,10 +48,10 @@ export default function AddFoodPage() {
   }, []);
 
   async function handleSubmit() {
+      
+     if (saving) return;
 
-    const {
-        data: { user },
-      } = await supabase.auth.getUser();
+     setSaving(true);
 
       if (!user) {
         alert("Please login.");
@@ -58,8 +70,8 @@ export default function AddFoodPage() {
     }
 
     if (!image) {
-  alert("Please choose an image.");
-  return;
+    alert("Please choose an image.");
+    return;
 }
 
 const formData = new FormData();
@@ -80,7 +92,12 @@ const upload = await fetch(
 );
 
 const uploadData = await upload.json();
-console.log(uploadData);
+
+if (!upload.ok) {
+  alert(uploadData.error?.message || "Image upload failed");
+  return;
+}
+
 const imageUrl = uploadData.secure_url;
 console.log("Image URL:", imageUrl);
     const { error } = await supabase
@@ -185,12 +202,17 @@ console.log("Image URL:", imageUrl);
             </option>
           ))}
         </select>
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-green-700 text-white py-4 rounded-2xl font-bold"
-        >
-          Save Food
-        </button>
+       <button
+        onClick={handleSubmit}
+        disabled={saving}
+        className={`w-full py-4 rounded-2xl font-bold text-white ${
+          saving
+            ? "bg-green-400 cursor-not-allowed"
+            : "bg-green-700"
+        }`}
+      >
+        {saving ? "Saving..." : "Save Food"}
+      </button>
 
       </div>
 
