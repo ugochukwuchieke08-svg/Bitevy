@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -8,6 +8,8 @@ export default async function FoodPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const supabase = await createServerSupabaseClient();
+
   const { id } = await params;
 
   const { data: food } = await supabase
@@ -41,7 +43,6 @@ export default async function FoodPage({
     <main className="min-h-screen bg-[#fff8f0]">
 
       <div className="relative h-80">
-
         <Image
           src={food.image}
           alt={food.name}
@@ -55,7 +56,6 @@ export default async function FoodPage({
         >
           ← Back
         </Link>
-
       </div>
 
       <div className="bg-white rounded-t-[40px] -mt-8 relative p-6">
@@ -69,13 +69,9 @@ export default async function FoodPage({
         </h1>
 
         <div className="flex gap-4 mt-3 text-gray-600">
-
           <span>⭐ {food.restaurants?.rating}</span>
-
           <span>🕒 {food.restaurants?.time}</span>
-
           <span>🚚 {food.restaurants?.delivery}</span>
-
         </div>
 
         <p className="mt-6 text-gray-600 leading-7">
@@ -85,15 +81,11 @@ export default async function FoodPage({
         <div className="mt-8 flex justify-between items-center">
 
           <div>
-
-            <p className="text-gray-500">
-              Price
-            </p>
+            <p className="text-gray-500">Price</p>
 
             <p className="text-4xl font-black text-green-700">
               ₦{food.price.toLocaleString()}
             </p>
-
           </div>
 
           {food.restaurants?.is_open ? (

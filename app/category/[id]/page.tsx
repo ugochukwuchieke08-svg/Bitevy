@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 export default async function CategoryPage({
@@ -6,6 +6,8 @@ export default async function CategoryPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const supabase = await createServerSupabaseClient();
+
   const { id } = await params;
 
   // Fetch category
@@ -15,7 +17,7 @@ export default async function CategoryPage({
     .eq("id", id)
     .single();
 
-  // Fetch foods in this category
+  // Fetch foods
   const { data: foods } = await supabase
     .from("menu_items")
     .select(`
@@ -31,10 +33,7 @@ export default async function CategoryPage({
   return (
     <main className="min-h-screen bg-[#fff8f0] p-5">
 
-      {/* Header */}
-
       <div className="mb-8">
-
         <Link
           href="/"
           className="text-orange-600 font-semibold"
@@ -51,7 +50,6 @@ export default async function CategoryPage({
           />
 
           <div>
-
             <h1 className="text-3xl font-black text-gray-900">
               {category?.name}
             </h1>
@@ -59,14 +57,10 @@ export default async function CategoryPage({
             <p className="text-gray-500 mt-1">
               {foods?.length || 0} food items
             </p>
-
           </div>
 
         </div>
-
       </div>
-
-      {/* Food List */}
 
       <div className="grid gap-5">
 
@@ -89,7 +83,6 @@ export default async function CategoryPage({
               <div className="flex justify-between items-start">
 
                 <div>
-
                   <h2 className="font-bold text-xl text-gray-900">
                     {food.name}
                   </h2>
@@ -97,7 +90,6 @@ export default async function CategoryPage({
                   <p className="text-orange-600 mt-1 font-semibold">
                     🍽 {food.restaurants?.name}
                   </p>
-
                 </div>
 
                 <p className="text-green-700 font-black text-xl">
@@ -119,7 +111,6 @@ export default async function CategoryPage({
       </div>
 
       {foods?.length === 0 && (
-
         <div className="bg-white rounded-3xl p-10 text-center">
 
           <h2 className="text-2xl font-bold text-gray-800">
@@ -131,7 +122,6 @@ export default async function CategoryPage({
           </p>
 
         </div>
-
       )}
 
     </main>

@@ -1,9 +1,9 @@
-import { supabase } from "@/lib/supabase/client";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import AddToCartButton from "@/components/AddToCartButton";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import Link from "next/link";
 
-
+const supabase = await createServerSupabaseClient();
 export default async function RestaurantPage({
   params,
 }: {
