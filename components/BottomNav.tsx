@@ -11,35 +11,79 @@ import {
   faBell,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import NotificationBanner from "./NotificationBanner";
 
 export default function BottomNav() {
 
+const [banner, setBanner] = useState<{
+  title: string;
+  message: string;
+} | null>(null);
   const { user } = useAuth();
 
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    async function loadUnread() {
-      if (!user) return;
+useEffect(() => {
+  if (!user) return;
 
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", {
-          count: "exact",
-          head: true,
-        })
-        .eq("user_id", user.id)
-        .eq("read", false);
+  const userId = user.id;
 
-      setUnreadCount(count || 0);
+  async function loadUnread() {
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq("user_id", userId)
+      .eq("read", false);
+
+    setUnreadCount(count || 0);
+  }
+
+  loadUnread();
+
+  const channel = supabase
+    .channel(`notifications-${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      },
+     async (payload) => {
+      loadUnread();
+
+      const notification = payload.new as any;
+
+      setBanner({
+        title: notification.title,
+        message: notification.message,
+      });
+
+      setTimeout(() => {
+        setBanner(null);
+      }, 4000);
     }
+    )
+    .subscribe();
 
-    loadUnread();
-  }, [user]);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user]);
 
   return (
-   
-
+     
+   <>
+  {banner && (
+    <NotificationBanner
+      title={banner.title}
+      message={banner.message}
+    />
+  )}
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-around py-3">
 
       <Link
@@ -100,6 +144,6 @@ export default function BottomNav() {
 
 
     </nav>
-
+   </>
   );
 }

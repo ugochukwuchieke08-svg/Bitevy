@@ -56,7 +56,7 @@ const { data: availableOrders, error } = await supabase
     image
   )
 `)
-  .eq("status", "pending")
+  .eq("status", "ready")
   .is("rider_id", null)
   .order("created_at", { ascending: false });
 console.log("AVAILABLE ORDERS:", availableOrders);
@@ -100,7 +100,6 @@ loadOrders();
 }, []);
 
 async function acceptOrder(orderId: string) {
-
   if (!user) return;
 
   setAcceptingId(orderId);
@@ -111,22 +110,47 @@ async function acceptOrder(orderId: string) {
       rider_id: user.id,
       status: "out_for_delivery",
     })
-    .eq("id", orderId);
+    .eq("id", orderId)
+    .is("rider_id", null);
 
   if (error) {
     console.log(error);
     setAcceptingId(null);
     return;
   }
-  
+
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("user_id")
+    .eq("id", orderId)
+    .single();
+
+  if (orderError || !order) {
+    console.log(orderError);
+    setAcceptingId(null);
+    return;
+  }
+
+  const { error: notificationError } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: order.user_id,
+      order_id: orderId,
+      title: "Rider Assigned",
+      message: "Your rider is on the way.",
+      link: `/orders/${orderId}`,
+    });
+
+  if (notificationError) {
+    console.log(notificationError);
+  }
+
   await loadOrders();
 
   setActiveTab("deliveries");
   setAcceptingId(null);
 }
-
 async function markDelivered(orderId: string) {
-
   setDeliveringId(orderId);
 
   const { error } = await supabase
@@ -142,10 +166,36 @@ async function markDelivered(orderId: string) {
     return;
   }
 
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("user_id")
+    .eq("id", orderId)
+    .single();
+
+  if (orderError || !order) {
+    console.log(orderError);
+    setDeliveringId(null);
+    return;
+  }
+
+  const { error: notificationError } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: order.user_id,
+      order_id: orderId,
+      title: "Order Delivered",
+      message: "Your food has been delivered.",
+      link: `/orders/${orderId}`,
+    });
+
+  if (notificationError) {
+    console.log(notificationError);
+  }
+
   await loadOrders();
 
   setDeliveringId(null);
-}
+} 
 
 if (loading) {
 return ( <main className="p-5"> <h1 className="text-black">
