@@ -20,7 +20,8 @@ export default function AddToCartButton({ food }: Props) {
 
   function handleAdd() {
 
- addToCart({
+addToCart({
+  id: food.id,
   name: food.name,
   price: food.price,
   image: food.image,
@@ -28,7 +29,6 @@ export default function AddToCartButton({ food }: Props) {
   restaurant_id: food.restaurant_id,
   restaurant_name: food.restaurants?.name,
 });
-
 
     setShow(true);
 

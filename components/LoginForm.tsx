@@ -40,6 +40,9 @@ export default function LoginPage() {
         password,
       });
 
+      console.log("LOGIN SESSION:", data.session);
+      console.log("LOGIN USER:", data.user);
+      console.log("LOGIN ERROR:", error);
 
     if(error){
 
@@ -225,7 +228,7 @@ export default function LoginPage() {
 
 
 
-  <Link href="signup/restaurants" className="flex flex-col items-center">
+  <Link href="signup/restaurantsignup" className="flex flex-col items-center">
 
     <FontAwesomeIcon
       icon={faUtensils}
