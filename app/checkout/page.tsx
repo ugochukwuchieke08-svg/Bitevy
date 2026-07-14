@@ -5,25 +5,15 @@ import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export default function CheckoutPage() {
   const cart = useCartStore((state) => state.cart);
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+
 
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-
-  if (authLoading) {
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      Loading...
-    </main>
-  );
-}
 
   const clearCart = useCartStore(
     (state) => state.clearCart
@@ -37,7 +27,21 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
- 
+  const [deliveryAreas, setDeliveryAreas] = useState<any[]>([]);
+  const [selectedArea, setSelectedArea] = useState<any>(null);
+
+  const SERVICE_FEE = 150;
+
+   const subtotal = cart.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+
+const deliveryFee = selectedArea?.fee || 0;
+
+const total = subtotal + deliveryFee + SERVICE_FEE;
+
+
    useEffect(() => {
   async function loadProfile() {
     if (!user) return;
@@ -55,23 +59,51 @@ export default function CheckoutPage() {
     setAddress(profile.address || "");
   }
 
+  async function loadDeliveryAreas() {
+  const { data, error } = await supabase
+    .from("delivery_areas")
+    .select("*")
+    .eq("is_active", true)
+    .order("fee");
+
+  if (!error) {
+    setDeliveryAreas(data || []);
+  }
+}
+
+loadDeliveryAreas();
+
   loadProfile();
 }, [user]);
 
+    if (authLoading) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      Loading...
+    </main>
+  );
+}
+
  const handleOrder = async () => {
 
-  if (loading) return;
 
+  if (loading) return;
+  try{
   setLoading(true);
 
  if (!name || !phone || !address) {
-  alert("Please fill all required fields");
-  setLoading(false);
+    alert("Please fill all required fields");
+    return;
+}
+
+if (!selectedArea) {
+  alert("Please select a delivery area.");
   return;
 }
 
 
-  if (!user) {
+// TEMP: Disable auth while building payments
+if (!user) {
   alert("Please login first");
   setLoading(false);
   router.push("/login");
@@ -87,100 +119,96 @@ export default function CheckoutPage() {
   return;
 }
 
-const { data: restaurant } = await supabase
+const { data: restaurant, error: restaurantError } = await supabase
   .from("restaurants")
   .select("owner_id, is_open")
   .eq("id", restaurantId)
   .single();
 
-if (!restaurant?.is_open) {
+if (restaurantError) {
+  console.error(restaurantError);
+  alert("Unable to verify restaurant.");
+  return;
+}
+
+if (!restaurant.is_open) {
   alert("Sorry, this restaurant is currently closed.");
   return;
 }
 
+console.log("Sending cart:", cart);
 
+console.log(
+  "Mapped cart:",
+  cart.map((item) => ({
+    id: item.id,
+    quantity: item.quantity,
+  }))
+);
 
- const { data: order, error } = await supabase
-  .from("orders")
-  .insert({
-    user_id: user.id,
-    restaurant_id: restaurantId,
-    total,
-    status: "pending",
-    customer_name: name,
-    phone,
-    delivery_address: address,
-    note,
-  })
-  .select()
-  .single();
+const response = await fetch("/api/checkout", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+  cart: cart.map((item) => ({
+    id: item.id,
+    quantity: item.quantity,
+  })),
+  userId: user.id,
+  name,
+  phone,
+  address,
+  note,
+  deliveryAreaId: selectedArea.id,
+}),
+});
 
-
-if (error || !order) {
-  console.log(error);
-  alert("Order failed");
+const result = await response.json();
+if (!response.ok) {
+  alert(result.error);
   setLoading(false);
   return;
 }
 
-await supabase.from("notifications").insert({
-  user_id: restaurant.owner_id,
-  order_id: order.id,
-  title: "New Order",
-  message: `${name} placed a new order.`,
-  link: `/restaurant/orders/${order.id}`,
+console.log(result);
+
+
+ const payment = await fetch("/api/opay/initiate", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    orderId: result.orderId,
+    paymentReference: result.paymentReference,
+    total: result.total,
+    customerName: name,
+    customerPhone: phone,
+
+    // Replace with the logged-in user's email later
+    customerEmail: user?.email,
+  }),
 });
 
- 
+const paymentResult = await payment.json();
 
+if (!payment.ok) {
+  alert(paymentResult.error);
+  return;
+}
 
+clearCart();
 
-  if(error){
-    console.log(error);
-    alert("Order failed");
+router.push(paymentResult.paymentUrl);
+
+} catch (error) {
+    console.error(error);
+    alert("Something went wrong. Please try again.");
+  } finally {
     setLoading(false);
-    return;
   }
-
-
-
-  const orderItems = cart.map((item)=>({
-    order_id: order.id,
-    name: item.name,
-    price: item.price,
-    quantity: item.quantity,
-    image: item.image,
-  }));
-
-
-
-  const { error:itemError } = await supabase
-    .from("order_items")
-    .insert(orderItems);
-
-
-
-  if(itemError){
-    console.log(itemError);
-    alert("Items failed");
-    setLoading(false);
-    return;
-  }
-
-
-  await supabase
-  .from("profiles")
-  .update({
-    full_name: name,
-    phone,
-    address,
-  })
-  .eq("id", user.id);
-
-  clearCart();
-
-  router.push("/order-success");
-
 };
 
   return (
@@ -193,6 +221,7 @@ await supabase.from("notifications").insert({
       <div className="bg-white rounded-3xl p-5 space-y-4">
 
         <input
+        disabled={loading}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Full Name"
@@ -200,21 +229,45 @@ await supabase.from("notifications").insert({
         />
 
         <input
+        disabled={loading}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Phone Number"
           className="w-full border rounded-xl p-3 text-black"
         />
 
+        <select
+        disabled={loading}
+        value={selectedArea?.id || ""}
+        onChange={(e) => {
+          const area = deliveryAreas.find(
+            (a) => a.id === Number(e.target.value)
+          );
+
+          setSelectedArea(area);
+        }}
+        className="w-full border rounded-xl p-3 text-black"
+      >
+        <option value="">Select Delivery Area</option>
+
+        {deliveryAreas.map((area) => (
+          <option key={area.id} value={area.id}>
+            {area.name} - ₦{area.fee.toLocaleString()}
+          </option>
+        ))}
+      </select>
+
         <textarea
+        disabled={loading}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Delivery Address"
+          placeholder="Detailed Delivery Address (House No., Street, Landmark...)"
           className="w-full border rounded-xl p-3 text-black"
           rows={3}
         />
 
         <textarea
+        disabled={loading}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Order Notes (Optional)"
@@ -230,25 +283,63 @@ await supabase.from("notifications").insert({
           Order Summary
         </h2>
 
-        <p className="mt-3 text-black">
-          Items: {cart.length}
-        </p>
+        <div className="space-y-2 mt-4">
 
-        <p className="mt-2 text-2xl font-bold text-green-700">
-          ₦{total.toLocaleString()}
-        </p>
+        <div className="flex justify-between text-black">
+          <span>Food Total</span>
+          <span>₦{subtotal.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between text-black">
+          <span>Delivery Fee</span>
+          <span>₦{deliveryFee.toLocaleString()}</span>
+        </div>
+
+        <div className="flex justify-between text-black">
+          <span>Service Fee</span>
+          <span>₦{SERVICE_FEE.toLocaleString()}</span>
+        </div>
+
+        <hr />
+
+        <div className="flex justify-between text-xl font-bold text-green-700">
+          <span>Total</span>
+          <span>₦{total.toLocaleString()}</span>
+        </div>
+
+      </div>
 
         <button
           onClick={handleOrder}
           disabled={loading}
-          className={`w-full mt-5 text-white py-4 rounded-full font-bold transition ${
-            loading
-              ? "bg-green-300 cursor-not-allowed"
-              : "bg-green-700"
-          }`}
+          className={`
+            w-full mt-6
+            bg-green-700 hover:bg-green-800
+            disabled:bg-green-400
+            disabled:cursor-not-allowed
+            text-white
+            py-4
+            rounded-full
+            font-bold
+            text-lg
+            transition-all
+            duration-200
+            flex
+            items-center
+            justify-center
+            shadow-lg
+            hover:shadow-xl
+          `}
         >
-          {loading ? "Placing Order..." : "Place Order"}
-        </button>
+          {loading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              Processing Order...
+            </>
+          ) : (
+            "Continue to Payment"
+          )}
+      </button>
 
       </div>
 

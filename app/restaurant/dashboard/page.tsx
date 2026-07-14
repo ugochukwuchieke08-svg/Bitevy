@@ -6,7 +6,12 @@ export default async function RestaurantDashboard() {
 
 const {
   data: { user },
+  error,
 } = await supabase.auth.getUser();
+
+console.log("Dashboard user:", user?.id);
+console.log("Dashboard error:", error);
+
 
 if (!user) {
   return <h1>Please login.</h1>;

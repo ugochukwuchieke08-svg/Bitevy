@@ -34,6 +34,14 @@ export async function middleware(request: NextRequest) {
 
   // Refresh the user's session if needed
   await supabase.auth.getUser();
+const {
+  data: { user },
+  error,
+} = await supabase.auth.getUser();
+
+console.log("Middleware user:", user?.id);
+console.log("Middleware error:", error);
+
 
   return response;
 }

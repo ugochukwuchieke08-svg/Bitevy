@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type CartItem = {
+  id: number;
   name: string;
   price: number;
   image: string;
@@ -38,14 +39,15 @@ export const useCartStore = create<CartStore>()(
             return state;
           }
 
-          const existingItem = state.cart.find(
-            (cartItem) => cartItem.name === item.name
+         const existingItem = state.cart.find(
+            (cartItem) => cartItem.id === item.id
           );
 
           if (existingItem) {
+
             return {
               cart: state.cart.map((cartItem) =>
-                cartItem.name === item.name
+                cartItem.id === item.id
                   ? {
                       ...cartItem,
                       quantity: cartItem.quantity + 1,

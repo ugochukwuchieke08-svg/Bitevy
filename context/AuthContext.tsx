@@ -29,14 +29,14 @@ export function AuthProvider({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+   async function loadSession() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      setUser(session?.user ?? null);
-      setLoading(false);
-    }
+    setUser(user ?? null);
+    setLoading(false);
+  }
 
     loadSession();
 

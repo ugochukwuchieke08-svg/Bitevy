@@ -18,12 +18,19 @@ export default function OrdersPage() {
     async function getOrders(){
 
       const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      console.log("SESSION:", session);
+
+      const {
         data:{
           user
         }
       } = await supabase.auth.getUser();
+      console.log("USER:", user);
 
-
+     
 
       if(!user){
         setLoading(false);
