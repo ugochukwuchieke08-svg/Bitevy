@@ -12,17 +12,20 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
 
-export default function LoginPage() {
+export default function LoginForm({
+  redirect,
+}: {
+  redirect: string;
+}) {
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+  
   const [showPassword, setShowPassword] = useState(false);
-  const redirect = searchParams.get("redirect") || "/";
 
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
