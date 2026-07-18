@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import FavoriteButton from "@/components/FavoriteButton";
+import RestaurantCard from "@/components/RestaurantCard";
 import {
   faFire,
   faArrowRight,
@@ -173,106 +174,10 @@ console.log("Error:", error);
   <div className="mt-5 flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
 
     {firstRow.map((restaurant) => (
-
-    <Link
-  key={restaurant.id}
-  href={`/restaurants/${restaurant.id}`}
-  className="group w-[230px] flex-shrink-0 overflow-hidden rounded-3xl bg-white border border-orange-100/60 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
->
-
-  {/* Image */}
-  <div className="relative overflow-hidden">
-
-    <img
-      src={restaurant.image}
-      alt={restaurant.name}
-      className="h-48 w-full object-cover transition duration-500 group-hover:scale-110"
+   <RestaurantCard
+      key={restaurant.id}
+      restaurant={restaurant}
     />
-
-    {/* Gradient */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-
-    {/* Rating */}
-    <div className="absolute top-4 left-4 flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-lg">
-
-      <FontAwesomeIcon
-        icon={faStar}
-        className="text-yellow-500 text-xs"
-      />
-
-      <span className="text-sm text-gray-700 font-bold">
-        {restaurant.rating}
-      </span>
-
-    </div>
-
-    {/* Open / Closed */}
-    <div className="absolute top-4 right-4">
-
-      {restaurant.is_open ? (
-
-        <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-          Open
-        </span>
-
-      ) : (
-
-        <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-          Closed
-        </span>
-
-      )}
-
-    </div>
-
-    {/* Favourite Button */}
-  <FavoriteButton restaurantId={restaurant.id} />
-
-
-  </div>
-
-  {/* Content */}
-  <div className="p-5">
-
-    <h3 className="truncate text-[17px] font-semibold text-gray-900">
-  {restaurant.name}
-</h3>
-
-   
-
-    <div className="mt-5 flex items-center justify-between">
-
-      <div className="flex items-center gap-2">
-
-        <FontAwesomeIcon
-          icon={faClock}
-          className="text-orange-500"
-        />
-
-        <span className="font-semibold text-[14px] text-gray-500">
-          {restaurant.time}
-        </span>
-
-      </div>
-
-      <div className="flex items-center gap-2">
-
-        <FontAwesomeIcon
-          icon={faMotorcycle}
-          className="text-orange-500"
-        />
-
-        <span className="font-semibold text-[14px] text-gray-500">
-          {restaurant.delivery}
-        </span>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</Link>
 
     ))}
 
@@ -282,112 +187,10 @@ console.log("Error:", error);
   <div className="mt-4 flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
 
     {secondRow.map((restaurant) => (
-
-     <Link
-  key={restaurant.id}
-  href={`/restaurants/${restaurant.id}`}
-  className="group w-[230px] flex-shrink-0 overflow-hidden rounded-3xl bg-white border border-orange-100/60 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
->
-
-  {/* Image */}
-  <div className="relative overflow-hidden">
-
-    <img
-      src={restaurant.image}
-      alt={restaurant.name}
-      className="h-48 w-full object-cover transition duration-500 group-hover:scale-110"
+    <RestaurantCard
+      key={restaurant.id}
+      restaurant={restaurant}
     />
-
-    {/* Gradient */}
-    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-
-    {/* Rating */}
-    <div className="absolute top-4 left-4 flex items-center gap-1 rounded-full bg-white px-3 py-1 shadow-lg">
-
-      <FontAwesomeIcon
-        icon={faStar}
-        className="text-yellow-500 text-xs"
-      />
-
-      <span className="text-sm font-bold">
-        {restaurant.rating}
-      </span>
-
-    </div>
-
-    {/* Open / Closed */}
-    <div className="absolute top-4 right-4">
-
-      {restaurant.is_open ? (
-
-        <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-          Open
-        </span>
-
-      ) : (
-
-        <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-          Closed
-        </span>
-
-      )}
-
-    </div>
-
-    {/* Favourite Button */}
-    <button className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur shadow-lg">
-
-      <FontAwesomeIcon
-        icon={faHeart}
-        className="text-red-500"
-      />
-
-    </button>
-
-  </div>
-
-  {/* Content */}
-  <div className="p-5">
-
-    <h3 className="truncate text-[16px] font-extrabold text-gray-900">
-      {restaurant.name}
-    </h3>
-
-   
-
-    <div className="mt-5 flex items-center justify-between">
-
-      <div className="flex items-center gap-2">
-
-        <FontAwesomeIcon
-          icon={faClock}
-          className="text-orange-500"
-        />
-
-        <span className="font-semibold text-[14px] text-gray-500">
-          {restaurant.time}
-        </span>
-
-      </div>
-
-      <div className="flex items-center gap-2">
-
-        <FontAwesomeIcon
-          icon={faMotorcycle}
-          className="text-orange-500"
-        />
-
-        <span className="font-semibold text-gray-500">
-          {restaurant.delivery}
-        </span>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</Link>
 
     ))}
 
@@ -397,9 +200,9 @@ console.log("Error:", error);
 
 
       {/* Premium Offer Banner */}
-<section className="px-5 mt-8">
+<section className="px-5 mt-6">
 
-  <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-500 via-orange-400 to-orange-600 shadow-2xl">
+  <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-500 via-orange-400 to-orange-600 shadow">
 
     {/* Background Food Image */}
     <img
@@ -415,7 +218,7 @@ console.log("Error:", error);
     <div className="absolute -top-16 -right-10 h-44 w-44 rounded-full bg-white/10" />
     <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-yellow-300/10" />
 
-    <div className="relative z-10 flex items-center justify-between p-7">
+    <div className="relative z-10 flex items-center justify-between p-5">
 
       <div className="max-w-[65%]">
 
@@ -432,7 +235,7 @@ console.log("Error:", error);
 
         </div>
 
-        <h2 className="mt-5 text-3xl font-black leading-tight text-white">
+        <h2 className="mt-3 text-2xl font-black leading-tight text-white">
           Up to
           <br />
           <span className="text-yellow-300">
@@ -440,18 +243,18 @@ console.log("Error:", error);
           </span>
         </h2>
 
-        <p className="mt-3 text-sm leading-relaxed text-white/90">
+        <p className="mt-2 text-xs leading-relaxed text-white/90">
           On selected restaurants across Bitevy.
           Limited time only.
         </p>
 
-        <button className="mt-6 flex items-center gap-2 rounded-full bg-white px-6 py-3 font-bold text-orange-600 shadow-xl transition-all hover:scale-105">
+        <Link href="/search" className="mt-4 flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-orange-600 shadow-xl transition-all hover:scale-105">
 
           Order Now
 
           <FontAwesomeIcon icon={faArrowRight} />
 
-        </button>
+        </Link>
 
       </div>
 
@@ -479,12 +282,7 @@ console.log("Error:", error);
       Recommended For You
     </h2>
 
-    <Link
-      href="/foods"
-      className="text-orange-600 font-semibold"
-    >
-      See all
-    </Link>
+    
 
   </div>
 

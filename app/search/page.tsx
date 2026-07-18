@@ -154,9 +154,17 @@ export default function SearchPage() {
 
         </div>
 
+        
+
+      </section>
+
+      {/* Content */}
+
+      <section className="px-5 pt-5">
+
         {/* Suggestions */}
 
-        <div className="mt-6">
+        <div className="mt-0">
 
           <p className="mb-3 text-sm font-semibold text-gray-500">
             Popular Searches
@@ -179,12 +187,6 @@ export default function SearchPage() {
           </div>
 
         </div>
-
-      </section>
-
-      {/* Content */}
-
-      <section className="px-5 pt-5">
 
         {loading ? (
 

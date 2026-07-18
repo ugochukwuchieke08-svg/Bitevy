@@ -13,8 +13,10 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function FavoriteButton({
   restaurantId,
+  onUnfavorite,
 }: {
   restaurantId: number;
+  onUnfavorite?: () => void;
 }) {
   const { user } = useAuth();
 
@@ -30,10 +32,13 @@ export default function FavoriteButton({
 
      const { data } = await supabase
       .from("restaurant_favorites")
-      .insert({
-        user_id: user.id,
-        restaurant_id: restaurantId,
-  });
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle();
+
+    setFavorite(!!data);
+    setLoading(false);
      
 
       setFavorite(!!data);
@@ -45,10 +50,12 @@ export default function FavoriteButton({
 
   async function toggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
-
+    e.stopPropagation();
+  
     console.log("Heart clicked");
 
   if (!user) {
+    
     console.log("No user logged in");
     return;
   }
@@ -58,22 +65,25 @@ export default function FavoriteButton({
 
     if (favorite) {
       await supabase
-        .from("favorites")
+        .from("restaurant_favorites")
         .delete()
         .eq("user_id", user.id)
-        .eq("food_id", restaurantId);
+        .eq("restaurant_id", restaurantId)
 
       setFavorite(false);
+      onUnfavorite?.();
     } else {
-      await supabase.from("favorites").insert({
+      await supabase
+      .from("restaurant_favorites")
+      .insert({
         user_id: user.id,
-        food_id: restaurantId,
+        restaurant_id: restaurantId,
       });
 
-      setFavorite(true);
+      setFavorite(prev => !prev);
     }
   }
-
+   
   if (loading) return null;
 
   return (

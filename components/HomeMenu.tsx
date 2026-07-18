@@ -75,6 +75,13 @@ return ( <div className="relative">
         My Restaurant
       </Link>
 
+       <Link
+        href="/privacy-policy"
+        className="block px-5 py-4 border-b text-black"
+      >
+        Privacy Policy
+      </Link>
+
       <button
         onClick={handleLogout}
         className="w-full text-left px-5 py-4 text-red-600"

@@ -248,27 +248,7 @@ if (!user) {
 
         </Link>
 
-        <Link
-          href="/settings"
-          className="flex items-center justify-between p-5 hover:bg-orange-50"
-        >
-          <div className="flex items-center gap-4">
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
-              ⚙️
-            </div>
-
-            <span className="font-semibold text-gray-700">
-              Settings
-            </span>
-
-          </div>
-
-          <span className="text-xl text-gray-400">
-            ›
-          </span>
-
-        </Link>
+       
 
       </div>
 
