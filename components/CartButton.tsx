@@ -16,7 +16,7 @@ export default function CartButton() {
   return (
     <Link
       href="/cart"
-      className="relative rounded-full p-3 text-black hover:bg-gray-100 transition"
+      className="relative rounded-full p-3 text-black hover:bg-gray-100 bg-white shadow transition"
     >
       <FontAwesomeIcon
         icon={faCartShopping}

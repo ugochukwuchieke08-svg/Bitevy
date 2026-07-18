@@ -1,10 +1,11 @@
 "use client";
-
+import HomeMenu from "@/components/HomeMenu";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import BottomNav from "@/components/BottomNav";
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
   
@@ -62,115 +63,230 @@ setLoading(false);
       </main>
     );
   }
-
   return (
-    <main className="min-h-screen bg-[#fff8f0] p-5">
+  <main className="min-h-screen bg-[#fff8f0] pb-32">
 
-     <div className="flex items-center gap-3 mb-6">
+    {/* Header */}
+    <header className="sticky top-0 z-40 bg-[#fff8f0]/90 backdrop-blur-xl px-5 pt-5 pb-4">
 
-  <button
-    onClick={() => router.push("/")}
-    className="w-10 h-10 bg-white rounded-full shadow flex items-center justify-center text-black text-xl"
-  >
-    ←
-  </button>
+      <div className="flex items-center justify-between">
 
-  <h1 className="text-3xl text-black font-bold">
-    My Account
-  </h1>
+        <button
+          onClick={() => router.push("/")}
+          className="h-11 w-11 rounded-full bg-white shadow-md flex items-center justify-center text-gray-700"
+        >
+          ←
+        </button>
 
-</div>
+        <h1 className="text-2xl font-black text-gray-900">
+          My Account
+        </h1>
 
-      <main className="min-h-screen bg-[#fff8f0]">
+        <HomeMenu />
 
-  <div className="bg-white shadow rounded-b-[40px] p-6 text-white">
+      </div>
 
+    </header>
 
-<div className="flex flex-col items-center">
+    {/* Profile Card */}
+    <section className="px-5 mt-6">
 
-  <div className="w-24 h-24 rounded-full bg-white shadow flex items-center justify-center text-4xl">
-    👤
-  </div>
+      <div className="rounded-[32px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
 
-<h1 className="text-black text-2xl font-bold mt-4">
-  {profile?.full_name || "User"}
-</h1>
+        <div className="flex items-center gap-5">
 
-  <p className="opacity-90">
-    {profile?.email || user?.email}
-  </p>
+          <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg">
 
-  <Link
-  href="/account/edit"
-  className="mt-4 bg-white text-green-700 px-5 py-2 rounded-full font-bold"
->
-  Edit Profile
-</Link>
+            <span className="text-5xl">
+              👤
+            </span>
 
-</div>
+          </div>
 
+          <div className="flex-1">
 
-  </div>
+            <h2 className="text-2xl font-black">
+              {profile?.full_name || "User"}
+            </h2>
 
-  <div className="p-5">
+            <p className="mt-1 text-orange-100">
+              {profile?.email || user?.email}
+            </p>
 
+            <Link
+              href="/account/edit"
+              className="inline-block mt-4 rounded-full bg-white px-5 py-2 font-bold text-orange-600 shadow"
+            >
+              Edit Profile
+            </Link>
 
-<div className="bg-white rounded-3xl p-5 mb-5">
+          </div>
 
-  <h2 className="font-bold text-black mb-3">
-    Contact Information
-  </h2>
+        </div>
 
-  <div className="space-y-4">
+      </div>
 
-    <div>
-      <p className="text-gray-500 text-sm">
-        Phone
-      </p>
+    </section>
 
-      <p className="font-bold text-black">
-        {profile?.phone || "Not added"}
-      </p>
-    </div>
+    {/* Quick Stats */}
+    <section className="px-5 mt-6">
 
-    <div>
-      <p className="text-gray-500 text-sm">
-        Delivery Address
-      </p>
+      <div className="grid grid-cols-3 gap-4">
 
-      <p className="font-bold text-black">
-        {profile?.address || "Not added"}
-      </p>
-    </div>
+        <div className="rounded-3xl bg-white p-5 text-center shadow">
 
-  </div>
+          <h3 className="text-3xl font-black text-orange-500">
+            0
+          </h3>
 
-</div>
+          <p className="mt-2 text-sm text-gray-500">
+            Orders
+          </p>
 
-<div className="bg-white text-gray-500 text rounded-3xl overflow-hidden">
+        </div>
 
-  <Link href="/orders" className="flex justify-between p-5 border-b">
-    <span>📦 My Orders</span>
-    <span>›</span>
-  </Link>
+        <div className="rounded-3xl bg-white p-5 text-center shadow">
 
-  <Link href="/favorites" className="flex justify-between p-5 border-b">
-    <span>❤️ Favorites</span>
-    <span>›</span>
-  </Link>
+          <h3 className="text-3xl font-black text-orange-500">
+            0
+          </h3>
 
-  <Link href="/settings" className="flex justify-between p-5">
-    <span>⚙️ Settings</span>
-    <span>›</span>
-  </Link>
+          <p className="mt-2 text-sm text-gray-500">
+            Favorites
+          </p>
 
-</div>
+        </div>
 
-  </div>
+        <div className="rounded-3xl bg-white p-5 text-center shadow">
 
-</main>
+          <h3 className="text-3xl font-black text-orange-500">
+            ★
+          </h3>
 
+          <p className="mt-2 text-sm text-gray-500">
+            Level
+          </p>
 
-    </main>
-  );
+        </div>
+
+      </div>
+
+    </section>
+
+    {/* Contact */}
+    <section className="px-5 mt-7">
+
+      <h2 className="mb-3 text-xl text-black font-bold">
+        Contact Information
+      </h2>
+
+      <div className="rounded-3xl bg-white p-5 shadow space-y-5">
+
+        <div>
+
+          <p className="text-sm text-gray-500">
+            Phone Number
+          </p>
+
+          <p className="mt-1 font-bold text-gray-900">
+            {profile?.phone || "Not added"}
+          </p>
+
+        </div>
+
+        <div>
+
+          <p className="text-sm text-gray-500">
+            Delivery Address
+          </p>
+
+          <p className="mt-1 font-bold text-gray-900">
+            {profile?.address || "Not added"}
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    {/* Menu */}
+    <section className="px-5 mt-7">
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow">
+
+        <Link
+          href="/orders"
+          className="flex items-center justify-between border-b p-5 hover:bg-orange-50"
+        >
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
+              📦
+            </div>
+
+            <span className="font-semibold text-gray-700">
+              My Orders
+            </span>
+
+          </div>
+
+          <span className="text-xl text-gray-400">
+            ›
+          </span>
+
+        </Link>
+
+        <Link
+          href="/favorites"
+          className="flex items-center justify-between border-b p-5 hover:bg-orange-50"
+        >
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
+              ❤️
+            </div>
+
+            <span className="font-semibold text-gray-700">
+              Favorites
+            </span>
+
+          </div>
+
+          <span className="text-xl text-gray-400">
+            ›
+          </span>
+
+        </Link>
+
+        <Link
+          href="/settings"
+          className="flex items-center justify-between p-5 hover:bg-orange-50"
+        >
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
+              ⚙️
+            </div>
+
+            <span className="font-semibold text-gray-700">
+              Settings
+            </span>
+
+          </div>
+
+          <span className="text-xl text-gray-400">
+            ›
+          </span>
+
+        </Link>
+
+      </div>
+
+    </section>
+
+    <BottomNav />
+
+  </main>
+);
 }

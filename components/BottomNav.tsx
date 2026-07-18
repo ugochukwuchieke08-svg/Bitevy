@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { usePathname } from "next/navigation";
+import NotificationBell from "@/components/NotificationBell";
 import {
   faHouse,
   faMagnifyingGlass,
@@ -15,65 +17,14 @@ import NotificationBanner from "./NotificationBanner";
 
 export default function BottomNav() {
 
+const pathname = usePathname();
+const isActive = (path: string) => pathname === path;
+
 const [banner, setBanner] = useState<{
   title: string;
   message: string;
 } | null>(null);
-  const { user } = useAuth();
-
-  const [unreadCount, setUnreadCount] = useState(0);
-
-useEffect(() => {
-  if (!user) return;
-
-  const userId = user.id;
-
-  async function loadUnread() {
-    const { count } = await supabase
-      .from("notifications")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .eq("user_id", userId)
-      .eq("read", false);
-
-    setUnreadCount(count || 0);
-  }
-
-  loadUnread();
-
-  const channel = supabase
-    .channel(`notifications-${userId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "notifications",
-        filter: `user_id=eq.${userId}`,
-      },
-     async (payload) => {
-      loadUnread();
-
-      const notification = payload.new as any;
-
-      setBanner({
-        title: notification.title,
-        message: notification.message,
-      });
-
-      setTimeout(() => {
-        setBanner(null);
-      }, 4000);
-    }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [user]);
+  
 
   return (
      
@@ -84,66 +35,99 @@ useEffect(() => {
       message={banner.message}
     />
   )}
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg flex justify-around py-3">
+   <nav className="fixed bottom-5 left-4 right-4 z-50">
+  <div className="flex justify-around items-center rounded-3xl bg-orange-500/80 backdrop-blur-xl px-2 py-3 shadow-2xl">
 
-      <Link
-        href="/"
-        className="flex flex-col items-center text-green-700"
-      >
-        <FontAwesomeIcon icon={faHouse} />
-        <span className="text-[8px] mt-1">
-          Home
-        </span>
-      </Link>
+    {/* Home */}
+    <Link
+  href="/"
+  className={`flex flex-col items-center transition ${
+    isActive("/") ? "text-white" : "text-white/70"
+  }`}
+>
+  <div
+    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
+      isActive("/")
+        ? "bg-white/20"
+        : "hover:bg-white/10"
+    }`}
+  >
+    <FontAwesomeIcon icon={faHouse} />
+  </div>
 
+  <span className="mt-1 text-[11px] font-medium">
+    Home
+  </span>
+</Link>
 
-      <Link
-        href="/search"
-        className="flex flex-col items-center text-black"
-      >
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
-        <span className="text-[8px] mt-1">
-          Search
-        </span>
-      </Link>
+    {/* Search */}
+   <Link
+  href="/search"
+  className={`flex flex-col items-center transition ${
+    isActive("/search") ? "text-white" : "text-white/70"
+  }`}
+>
+  <div
+    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
+      isActive("/search")
+        ? "bg-white/20"
+        : "hover:bg-white/10"
+    }`}
+  >
+    <FontAwesomeIcon icon={faMagnifyingGlass} />
+  </div>
 
+  <span className="mt-1 text-[11px] font-medium">
+    Search
+  </span>
+</Link>
 
-      <Link
-        href="/orders"
-        className="flex flex-col items-center text-black"
-      >
-        <FontAwesomeIcon icon={faBox} />
-        <span className="text-[8px] mt-1">
-          Orders
-        </span>
-      </Link>
-      
-      <Link
-        href="/notifications"
-        className="relative flex flex-col items-center text-black"
-      >
-        <FontAwesomeIcon icon={faBell} />
+    {/* Orders */}
+    <Link
+  href="/orders"
+  className={`flex flex-col items-center transition ${
+    isActive("/orders") ? "text-white" : "text-white/70"
+  }`}
+>
+  <div
+    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
+      isActive("/orders")
+        ? "bg-white/20"
+        : "hover:bg-white/10"
+    }`}
+  >
+    <FontAwesomeIcon icon={faBox} />
+  </div>
 
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
+  <span className="mt-1 text-[11px] font-medium">
+    Orders
+  </span>
+</Link>
 
-        <span className="text-[8px] mt-1">
-          Notifications
-        </span>
-      </Link>
+    {/* Profile */}
+    <Link
+  href="/account"
+  className={`flex flex-col items-center transition ${
+    isActive("/account") ? "text-white" : "text-white/70"
+  }`}
+>
+  <div
+    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
+      isActive("/account")
+        ? "bg-white/20"
+        : "hover:bg-white/10"
+    }`}
+  >
+    <FontAwesomeIcon icon={faUser} />
+  </div>
 
-      <Link href="/account" className="flex flex-col items-center text-black">
-        <FontAwesomeIcon icon={faUser} />
-        <span className="text-[8px] mt-1">
-          Profile
-        </span>
-      </Link>
+  <span className="mt-1 text-[11px] font-medium">
+    Me
+  </span>
+</Link>
 
-
-    </nav>
+  </div>
+</nav>
    </>
   );
 }

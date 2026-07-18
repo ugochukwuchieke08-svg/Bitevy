@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import BottomNav from "@/components/BottomNav";
 
 
 export default function OrdersPage() {
@@ -234,6 +235,9 @@ export default function OrdersPage() {
 
         )
       }
+
+      {/* Bottom Navigation */}
+            <BottomNav />
     </main>
 
   );
