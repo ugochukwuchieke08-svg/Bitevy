@@ -106,16 +106,17 @@ console.log("Error:", error);
   </div>
 
   <UserGreeting />
-</header>
+</header >
+<section className="px-2">
  <Link href="/search">
     <div className="mt-4 flex items-center gap-3 rounded-full bg-gray-100 px-5 py-3 shadow text-gray-500">
       <FontAwesomeIcon icon={faMagnifyingGlass} />
       <span>Search food or restaurants...</span>
     </div>
   </Link>
-
+</section>
       {/* Categories */}
-     <section className="px-5 mt-6">
+     <section className="px-2 mt-6">
 
   <h2 className="font-bold text-xl mb-4 text-gray-900">
     Categories
@@ -155,7 +156,7 @@ console.log("Error:", error);
 </section>
 
      {/* Restaurants */}
-<section className="px-5 mt-8">
+<section className="px-2 mt-8">
 
   <div className="flex justify-between items-center">
     <h2 className="font-bold text-xl text-gray-900">
@@ -274,7 +275,7 @@ console.log("Error:", error);
 
       {/* Food Recommendations */}
       {/* Recommended */}
-<section className="px-5 mt-8">
+<section className="px-2 mt-8">
 
   <div className="flex justify-between items-center mb-4">
 
