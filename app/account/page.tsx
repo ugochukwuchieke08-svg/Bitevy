@@ -51,8 +51,7 @@ setLoading(false);
   if (loading) {
     return <div className="p-5">Loading...</div>;
   }
-
-  if (!user) {
+if (!user) {
     return (
       <main className="p-5">
         <h1>Please login</h1>
@@ -89,44 +88,34 @@ setLoading(false);
     </header>
 
     {/* Profile Card */}
-    <section className="px-5 mt-6">
-
-      <div className="rounded-[32px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
-
-        <div className="flex items-center gap-5">
-
-          <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg">
-
-            <span className="text-5xl">
-              👤
-            </span>
-
-          </div>
-
-          <div className="flex-1">
-
-            <h2 className="text-2xl font-black">
-              {profile?.full_name || "User"}
-            </h2>
-
-            <p className="mt-1 text-orange-100">
-              {profile?.email || user?.email}
-            </p>
-
-            <Link
-              href="/account/edit"
-              className="inline-block mt-4 rounded-full bg-white px-5 py-2 font-bold text-orange-600 shadow"
-            >
-              Edit Profile
-            </Link>
-
-          </div>
-
-        </div>
-
+<section className="px-5 mt-6">
+  <div className="rounded-[32px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
+    <div className="flex flex-col items-center text-center">
+      {/* Profile Icon */}
+      <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg">
+        <span className="text-5xl">👤</span>
       </div>
 
-    </section>
+      {/* User Info */}
+      <div className="mt-5">
+        <h2 className="text-2xl font-black">
+          {profile?.full_name || "User"}
+        </h2>
+
+        <p className="mt-2 text-orange-100 break-all">
+          {profile?.email || user?.email}
+        </p>
+
+        <Link
+          href="/account/edit"
+          className="inline-block mt-5 rounded-full bg-white px-5 py-2 font-bold text-orange-600 shadow"
+        >
+          Edit Profile
+        </Link>
+      </div>
+    </div>
+  </div>
+</section>
 
     {/* Quick Stats */}
     <section className="px-5 mt-6">

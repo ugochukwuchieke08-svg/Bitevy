@@ -35,96 +35,108 @@ const [banner, setBanner] = useState<{
       message={banner.message}
     />
   )}
-   <nav className="fixed bottom-5 left-4 right-4 z-50">
-  <div className="flex justify-around items-center rounded-3xl bg-orange-500/80 backdrop-blur-xl px-2 py-3 shadow-2xl">
+  <nav className="fixed bottom-3 left-6 right-6 z-50">
+  <div className="flex items-center justify-around rounded-full bg-orange-500/80 backdrop-blur-xl px-2 py-1.5 shadow-xl  border border-orange-400/20">
 
     {/* Home */}
     <Link
-  href="/"
-  className={`flex flex-col items-center transition ${
-    isActive("/") ? "text-white" : "text-white/70"
-  }`}
->
-  <div
-    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-      isActive("/")
-        ? "bg-white/20"
-        : "hover:bg-white/10"
-    }`}
-  >
-    <FontAwesomeIcon icon={faHouse} />
-  </div>
+      href="/"
+      className={`flex flex-col items-center transition-all duration-200 ${
+        isActive("/") ? "text-white" : "text-white/70"
+      }`}
+    >
+      <div
+        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+          isActive("/")
+            ? "bg-white/20 scale-105"
+            : "hover:bg-white/10"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={faHouse}
+          className="text-[17px]"
+        />
+      </div>
 
-  <span className="mt-1 text-[11px] font-medium">
-    Home
-  </span>
-</Link>
+      <span className="mt-0.5 text-[10px] font-medium">
+        Home
+      </span>
+    </Link>
 
     {/* Search */}
-   <Link
-  href="/search"
-  className={`flex flex-col items-center transition ${
-    isActive("/search") ? "text-white" : "text-white/70"
-  }`}
->
-  <div
-    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-      isActive("/search")
-        ? "bg-white/20"
-        : "hover:bg-white/10"
-    }`}
-  >
-    <FontAwesomeIcon icon={faMagnifyingGlass} />
-  </div>
+    <Link
+      href="/search"
+      className={`flex flex-col items-center transition-all duration-200 ${
+        isActive("/search") ? "text-white" : "text-white/70"
+      }`}
+    >
+      <div
+        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+          isActive("/search")
+            ? "bg-white/20 scale-105"
+            : "hover:bg-white/10"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={faMagnifyingGlass}
+          className="text-[17px]"
+        />
+      </div>
 
-  <span className="mt-1 text-[11px] font-medium">
-    Search
-  </span>
-</Link>
+      <span className="mt-0.5 text-[10px] font-medium">
+        Search
+      </span>
+    </Link>
 
     {/* Orders */}
     <Link
-  href="/orders"
-  className={`flex flex-col items-center transition ${
-    isActive("/orders") ? "text-white" : "text-white/70"
-  }`}
->
-  <div
-    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-      isActive("/orders")
-        ? "bg-white/20"
-        : "hover:bg-white/10"
-    }`}
-  >
-    <FontAwesomeIcon icon={faBox} />
-  </div>
+      href="/orders"
+      className={`flex flex-col items-center transition-all duration-200 ${
+        isActive("/orders") ? "text-white" : "text-white/70"
+      }`}
+    >
+      <div
+        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+          isActive("/orders")
+            ? "bg-white/20 scale-105"
+            : "hover:bg-white/10"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={faBox}
+          className="text-[17px]"
+        />
+      </div>
 
-  <span className="mt-1 text-[11px] font-medium">
-    Orders
-  </span>
-</Link>
+      <span className="mt-0.5 text-[10px] font-medium">
+        Orders
+      </span>
+    </Link>
 
     {/* Profile */}
     <Link
-  href="/account"
-  className={`flex flex-col items-center transition ${
-    isActive("/account") ? "text-white" : "text-white/70"
-  }`}
->
-  <div
-    className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-      isActive("/account")
-        ? "bg-white/20"
-        : "hover:bg-white/10"
-    }`}
-  >
-    <FontAwesomeIcon icon={faUser} />
-  </div>
+      href="/account"
+      className={`flex flex-col items-center transition-all duration-200 ${
+        isActive("/account") ? "text-white" : "text-white/70"
+      }`}
+    >
+      <div
+        className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
+          isActive("/account")
+            ? "bg-white/20 scale-105"
+            : "hover:bg-white/10"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={faUser}
+          className="text-[17px]"
+        />
+      </div>
 
-  <span className="mt-1 text-[11px] font-medium">
-    Me
-  </span>
-</Link>
+      <span className="mt-0.5 text-[10px] font-medium">
+        Me
+      </span>
+    </Link>
 
   </div>
 </nav>

@@ -79,10 +79,7 @@ console.log("Error:", error);
    console.log("Foods:", foods);
 console.log("Error:", error);
   return (
-
-
-  <RedirectIfNotLoggedIn>
-
+   <RedirectIfNotLoggedIn>
     <main className="min-h-screen bg-[#fff8f0] pb-20">
 
 
@@ -177,10 +174,10 @@ console.log("Error:", error);
 
     {firstRow.map((restaurant) => (
 
-      <Link
+    <Link
   key={restaurant.id}
   href={`/restaurants/${restaurant.id}`}
-  className="group min-w-[310px] flex-shrink-0 overflow-hidden rounded-[28px] bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+  className="group w-[230px] flex-shrink-0 overflow-hidden rounded-3xl bg-white border border-orange-100/60 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
 >
 
   {/* Image */}
@@ -237,13 +234,11 @@ console.log("Error:", error);
   {/* Content */}
   <div className="p-5">
 
-    <h3 className="truncate text-xl font-extrabold text-gray-900">
-      {restaurant.name}
-    </h3>
+    <h3 className="truncate text-[17px] font-semibold text-gray-900">
+  {restaurant.name}
+</h3>
 
-    <p className="mt-1 text-sm text-gray-500">
-      Delicious meals • Fast delivery
-    </p>
+   
 
     <div className="mt-5 flex items-center justify-between">
 
@@ -254,7 +249,7 @@ console.log("Error:", error);
           className="text-orange-500"
         />
 
-        <span className="font-semibold text-gray-700">
+        <span className="font-semibold text-[14px] text-gray-500">
           {restaurant.time}
         </span>
 
@@ -267,7 +262,7 @@ console.log("Error:", error);
           className="text-orange-500"
         />
 
-        <span className="font-semibold text-gray-700">
+        <span className="font-semibold text-[14px] text-gray-500">
           {restaurant.delivery}
         </span>
 
@@ -291,7 +286,7 @@ console.log("Error:", error);
      <Link
   key={restaurant.id}
   href={`/restaurants/${restaurant.id}`}
-  className="group min-w-[310px] flex-shrink-0 overflow-hidden rounded-[28px] bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+  className="group w-[230px] flex-shrink-0 overflow-hidden rounded-3xl bg-white border border-orange-100/60 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]"
 >
 
   {/* Image */}
@@ -354,13 +349,11 @@ console.log("Error:", error);
   {/* Content */}
   <div className="p-5">
 
-    <h3 className="truncate text-xl font-extrabold text-gray-900">
+    <h3 className="truncate text-[16px] font-extrabold text-gray-900">
       {restaurant.name}
     </h3>
 
-    <p className="mt-1 text-sm text-gray-500">
-      Delicious meals • Fast delivery
-    </p>
+   
 
     <div className="mt-5 flex items-center justify-between">
 
@@ -371,7 +364,7 @@ console.log("Error:", error);
           className="text-orange-500"
         />
 
-        <span className="font-semibold text-gray-700">
+        <span className="font-semibold text-[14px] text-gray-500">
           {restaurant.time}
         </span>
 
@@ -384,7 +377,7 @@ console.log("Error:", error);
           className="text-orange-500"
         />
 
-        <span className="font-semibold text-gray-700">
+        <span className="font-semibold text-gray-500">
           {restaurant.delivery}
         </span>
 
@@ -411,7 +404,7 @@ console.log("Error:", error);
     {/* Background Food Image */}
     <img
       src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200"
-      alt="Pizza"
+      alt="Pizza" 
       className="absolute inset-0 h-full w-full object-cover opacity-20"
     />
 
