@@ -12,6 +12,9 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const [orderCount, setOrderCount] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  
   if (authLoading) {
   return (
     <main className="min-h-screen flex items-center justify-center">
@@ -43,6 +46,33 @@ console.log("PROFILE ERROR:", error);
 
 setProfile(profile);
 setLoading(false);
+
+// Count favorites
+const { count: favorites } = await supabase
+  .from("restaurant_favorites")
+  .select("*", {
+    count: "exact",
+    head: true,
+  })
+  .eq("user_id", user.id);
+
+// Count orders
+const { count: orders, error: orderError } = await supabase
+  .from("orders")
+  .select("*", {
+    count: "exact",
+    head: true,
+  })
+  .eq("user_id", user.id);
+
+console.log("Order Count:", orders);
+console.log("Order Error:", orderError);
+
+setLoading(false);
+setFavoriteCount(favorites ?? 0);
+setOrderCount(orders ?? 0);
+
+
     }
 
     getProfile();
@@ -89,7 +119,7 @@ if (!user) {
 
     {/* Profile Card */}
 <section className="px-5 mt-6">
-  <div className="rounded-[32px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-xl">
+  <div className="rounded-[32px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white">
     <div className="flex flex-col items-center text-center">
       {/* Profile Icon */}
       <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg">
@@ -125,7 +155,7 @@ if (!user) {
         <div className="rounded-3xl bg-white p-5 text-center shadow">
 
           <h3 className="text-3xl font-black text-orange-500">
-            0
+            {orderCount}
           </h3>
 
           <p className="mt-2 text-sm text-gray-500">
@@ -137,7 +167,7 @@ if (!user) {
         <div className="rounded-3xl bg-white p-5 text-center shadow">
 
           <h3 className="text-3xl font-black text-orange-500">
-            0
+            {favoriteCount}
           </h3>
 
           <p className="mt-2 text-sm text-gray-500">
@@ -247,7 +277,47 @@ if (!user) {
           </span>
 
         </Link>
+  
 
+         {/* Danger Zone */}
+          <section className="px-5 mt-8 mb-8">
+
+            <h2 className="mb-3 text-xl font-bold text-red-600">
+              Danger Zone
+            </h2>
+
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 shadow">
+
+              <div className="flex items-start justify-between">
+
+                <div>
+
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Delete Account
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    Permanently delete your Bitevy account and associated personal data.
+                    This action cannot be undone.
+                  </p>
+
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-2xl">
+                  🗑️
+                </div>
+
+              </div>
+
+              <Link
+                href="/delete-account"                className="mt-6 flex w-full items-center justify-center rounded-2xl bg-red-500 py-4 font-bold text-white transition hover:bg-red-600 active:scale-[0.98]"
+              >
+                Delete My Account
+              </Link>
+
+            </div>
+
+          </section>
        
 
       </div>
