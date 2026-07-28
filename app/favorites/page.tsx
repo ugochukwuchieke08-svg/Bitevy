@@ -76,12 +76,12 @@ console.log(error);
   }
 
   return (
-   <main className="min-h-screen bg-[#fff8f0] p-5">
+   <main className="min-h-screen bg-[#fff8f0] px-4 py-5 pb-28">
       <h1 className="mb-6 text-3xl text-black font-black">
         Favorites
       </h1>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {restaurants.map((restaurant) => (
           <RestaurantCard
   key={restaurant.id}

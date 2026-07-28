@@ -1,5 +1,5 @@
 "use client";
-
+import { getFcmToken } from "@/lib/getFcmToken";
 import {
   createContext,
   useContext,
@@ -28,36 +28,70 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // First effect
   useEffect(() => {
-   async function loadSession() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    async function loadSession() {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
-    setUser(user ?? null);
-    setLoading(false);
-  }
+      console.log("SESSION:", session);
+      console.log("SESSION ERROR:", error);
+
+      setUser(session?.user ?? null);
+      setLoading(false);
+    }
 
     loadSession();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("AUTH EVENT:", _event);
+      console.log("SESSION:", session);
+
+      setUser(session?.user ?? null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Second effect
+  useEffect(() => {
+  async function registerToken() {
+    if (!user) return;
+
+    const token = getFcmToken();
+
+    console.log("Token from helper:", token);
+    // @ts-ignore
+    console.log("window.JSBridge:", window.JSBridge);
+
+    if (!token) {
+      console.log("No FCM token available");
+      return;
+    }
+
+    const res = await fetch("/api/fcm/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        token,
+      }),
+    });
+
+    console.log(await res.json());
+  }
+
+  registerToken();
+}, [user]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading }}>
       {children}
     </AuthContext.Provider>
   );

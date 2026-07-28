@@ -72,7 +72,11 @@ export default function OrdersPage() {
 
   },[]);
 
-
+useEffect(() => {
+  console.log("URL:", window.location.href);
+  // @ts-ignore
+  console.log("JSBridge:", window.JSBridge);
+}, []);
 
   if(loading){
 
