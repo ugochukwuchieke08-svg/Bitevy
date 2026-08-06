@@ -193,9 +193,19 @@ console.log(result);
 });
 
 const paymentResult = await payment.json();
+console.log(paymentResult);
 
 if (!payment.ok) {
   alert(paymentResult.error);
+  return;
+}
+
+// Temporary payment bypass
+if (paymentResult.bypass) {
+  clearCart();
+
+  router.push("order-success");
+
   return;
 }
 

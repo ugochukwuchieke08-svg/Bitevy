@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { ArrowLeft } from "lucide-react";
+import { Star, Clock3, Bike } from "lucide-react";
 
 export default async function RestaurantDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -9,19 +11,40 @@ const {
   error,
 } = await supabase.auth.getUser();
 
+if (!user) {
+  return <h1>Please login.</h1>;
+}
+
 console.log("Dashboard user:", user?.id);
 console.log("Dashboard error:", error);
 
 
-if (!user) {
-  return <h1>Please login.</h1>;
-}
+
 
 const { data: restaurant } = await supabase
   .from("restaurants")
   .select("*")
   .eq("owner_id", user.id)
   .single();
+
+  const { data: orders } = await supabase
+  .from("orders")
+  .select("status, created_at, restaurant_amount")
+  .eq("restaurant_id", restaurant.id);
+
+const pendingOrders =
+  orders?.filter(order => order.status === "pending").length ?? 0;
+
+const today = new Date().toISOString().split("T")[0];
+
+const revenueToday =
+  orders
+    ?.filter(
+      order =>
+        order.status === "completed" &&
+        order.created_at.startsWith(today)
+    )
+    .reduce((sum, order) => sum + (order.restaurant_amount ?? 0), 0) ?? 0;
 
   if (!restaurant) {
     return (
@@ -36,7 +59,7 @@ const { data: restaurant } = await supabase
         </p>
 
         <Link
-          href="/signup/restaurant-signup"
+          href="/signup/restaurantsignup"
           className="mt-8 bg-green-700 text-white px-6 py-3 rounded-full font-semibold"
         >
           Register Restaurant
@@ -49,17 +72,26 @@ const { data: restaurant } = await supabase
   return (
     <main className="min-h-screen bg-[#fff8f0]">
 
-      <header className="bg-white shadow-sm p-5">
+     
 
-        <h1 className="text-3xl text-black font-bold">
-          Restaurant Dashboard
-        </h1>
+<header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+  <div className="relative flex items-center justify-center h-16 px-5">
 
-        <p className="text-gray-500 mt-1">
-          Welcome back 👋
-        </p>
+    {/* Back Button */}
+    <Link
+      href="/account" // Change this to wherever you want to go back
+      className="absolute left-5 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
+    >
+      <ArrowLeft className="w-6 h-6 text-black" />
+    </Link>
 
-      </header>
+    {/* Title */}
+    <h1 className="text-xl font-bold text-black">
+      Restaurant Dashboard
+    </h1>
+
+  </div>
+</header>
 
       <section className="p-5">
 
@@ -77,15 +109,24 @@ const { data: restaurant } = await supabase
               {restaurant.name}
             </h2>
 
-            <div className="flex gap-5 mt-4 text-gray-600">
+            <div className="flex flex-wrap items-center gap-6 mt-4 text-gray-600">
 
-              <span>⭐ {restaurant.rating}</span>
+  <div className="flex items-center gap-2">
+    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+    <span>{restaurant.rating}</span>
+  </div>
 
-              <span>🕒 {restaurant.time}</span>
+  <div className="flex items-center gap-2">
+    <Clock3 className="w-5 h-5 text-blue-500" />
+    <span>{restaurant.time}</span>
+  </div>
 
-              <span>🚚 {restaurant.delivery}</span>
+  <div className="flex items-center gap-2">
+    <Bike className="w-5 h-5 text-green-600" />
+    <span>{restaurant.delivery}</span>
+  </div>
 
-            </div>
+</div>
 
           </div>
 
@@ -95,27 +136,31 @@ const { data: restaurant } = await supabase
 
       <section className="px-5 grid grid-cols-2 gap-4">
 
-        <div className="bg-white rounded-2xl p-5 shadow">
-          <h3 className="text-gray-500">
-            Pending Orders
-          </h3>
+  <div className="bg-white rounded-2xl p-5 shadow">
 
-          <p className="text-4xl  text-black font-black mt-2">
-            0
-          </p>
-        </div>
+    <h3 className="text-gray-500 text-sm">
+      Pending Orders
+    </h3>
 
-        <div className="bg-white rounded-2xl p-5 shadow">
-          <h3 className="text-gray-500">
-            Revenue Today
-          </h3>
+    <p className="text-4xl font-black text-black mt-2">
+      {pendingOrders}
+    </p>
 
-          <p className="text-3xl text-black font-black mt-2">
-            ₦0
-          </p>
-        </div>
+  </div>
 
-      </section>
+  <div className="bg-white rounded-2xl p-5 shadow">
+
+    <h3 className="text-gray-500 text-sm">
+      Revenue Today
+    </h3>
+
+    <p className="text-3xl font-black text-black mt-2">
+      ₦{revenueToday.toLocaleString()}
+    </p>
+
+  </div>
+
+</section>
 
       <section className="p-5">
 

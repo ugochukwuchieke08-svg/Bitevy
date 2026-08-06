@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+
 
 export default function RiderPage() {
 
 const [orders, setOrders] = useState<any[]>([]);
 const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
 const [user, setUser] = useState<any>(null);
-const [allowed, setAllowed] = useState(false);
+const [applicationStatus, setApplicationStatus] = useState<
+  "pending" | "active" | "rejected" | "none" | null
+>(null);
 const [loading, setLoading] = useState(true);
 const [acceptingId, setAcceptingId] = useState<string | null>(null);
 const [deliveringId, setDeliveringId] = useState<string | null>(null);
@@ -28,18 +33,31 @@ if (!user) {
 
 setUser(user);
 
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+const { data: application, error: applicationError } = await supabase
+  .from("rider_applications")
+  .select("status")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-if (profile?.role !== "rider") {
+if (applicationError) {
+  console.error("Rider application check failed:", applicationError);
+  setApplicationStatus("none");
   setLoading(false);
   return;
 }
 
-setAllowed(true);
+if (!application) {
+  setApplicationStatus("none");
+  setLoading(false);
+  return;
+}
+
+setApplicationStatus(application.status);
+
+if (application.status !== "active") {
+  setLoading(false);
+  return;
+};
 
 const { data: availableOrders, error } = await supabase
   .from("orders")
@@ -203,10 +221,98 @@ Loading... </h1> </main>
 );
 }
 
-if (!allowed) {
-return ( <main className="p-5"> <h1 className="text-red-600 text-3xl font-bold">
-Access Denied </h1> </main>
-);
+if (applicationStatus === "none") {
+  return (
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
+          <span className="text-4xl">🏍️</span>
+        </div>
+
+        <h1 className="text-2xl text-black font-bold text-slate-900">
+          Become a Bitevy Rider
+        </h1>
+
+        <p className="mt-3 text-gray-700 text-slate-600 leading-relaxed">
+          You don't have a rider account yet. Register now to start receiving
+          delivery requests and earning with Bitevy.
+        </p>
+
+        <a
+          href="/signup/rider"
+          className="mt-8 block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white transition hover:bg-orange-600"
+        >
+          Register Now
+        </a>
+
+        <a
+          href="/"
+          className="mt-3 block w-full rounded-2xl border border-slate-300 py-4 text-center font-semibold text-gray-700 mtext-slate-700 transition hover:bg-slate-50"
+        >
+          Back to Home
+        </a>
+      </div>
+    </main>
+  );
+}
+
+if (applicationStatus === "pending") {
+  return (
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+      <div className="w-full text-gray-700 max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
+          <span className="text-4xl">⏳</span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-slate-900">
+          Application Under Review
+        </h1>
+
+        <p className="mt-3 text-slate-600 leading-relaxed">
+          Your rider application has been submitted successfully and is
+          currently being reviewed by the Bitevy team.
+        </p>
+
+        <p className="mt-4 text-sm text-slate-500">
+          We'll notify you once your application has been approved.
+        </p>
+
+        <a
+          href="/"
+          className="mt-8 block w-full rounded-2xl border border-slate-300 py-4 text-center font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Back to Home
+        </a>
+      </div>
+    </main>
+  );
+}
+
+if (applicationStatus === "rejected") {
+  return (
+    <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+          <span className="text-4xl">✕</span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-slate-900">
+          Application Not Approved
+        </h1>
+
+        <p className="mt-3 text-slate-600 leading-relaxed">
+          Unfortunately, your rider application was not approved at this time.
+        </p>
+
+        <a
+          href="/"
+          className="mt-8 block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white transition hover:bg-orange-600"
+        >
+          Back to Bitevy
+        </a>
+      </div>
+    </main>
+  );
 }
 
 return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-orange-100 p-5">

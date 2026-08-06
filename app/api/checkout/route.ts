@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendNotification } from "@/lib/sendNotification";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -152,6 +153,32 @@ if (orderError || !order) {
     { error: "Unable to create order." },
     { status: 400 }
   );
+}
+
+const { data: restaurant, error: restaurantError } = await supabase
+  .from("restaurants")
+  .select("owner_id, name")
+  .eq("id", restaurantId)
+  .single();
+
+if (restaurantError) {
+  console.error("Failed to fetch restaurant:", restaurantError);
+} else if (restaurant?.owner_id) {
+  try {
+    await sendNotification({
+      userId: restaurant.owner_id,
+      title: "New Order Received 🍔",
+      body: `${name} placed a new order.`,
+      data: {
+        orderId: order.id.toString(),
+        type: "new_order",
+      },
+    });
+
+    console.log("Restaurant notification sent.");
+  } catch (err) {
+    console.error("Failed to send notification:", err);
+  }
 }
 
 const orderItems = cart.map((cartItem: any) => {

@@ -1,21 +1,12 @@
-import "@/lib/firebase-admin";
-import { getMessaging } from "firebase-admin/messaging";
 import { NextResponse } from "next/server";
+import { sendNotification } from "@/lib/sendNotification";
 
 export async function GET() {
-  const message = {
-    notification: {
-      title: "Bitevy Test",
-      body: "Firebase is connected 🚀",
-    },
-    token:
-      "dfZ8s9NwRAqkX0y3xvJenf:APA91bH4DbzT-lZH3S9-qK79FkbwPRGzWIDJzmmljYkMVnlvxssbK5cS-Xamt_dmXoGAFJyR8zO57R20UYSVMIQTQW6_ZDvctmZ7hJj1iOcWxnuvbeFpw",
-  };
-
-  const response = await getMessaging().send(message);
-
-  return NextResponse.json({
-    success: true,
-    response,
+  await sendNotification({
+    userId: "0e57f8ef-d404-4ced-ab89-d5195f2733b6",
+    title: "Bitevy Test 🚀",
+    body: "This notification came from sendNotification().",
   });
+
+  return NextResponse.json({ success: true });
 }

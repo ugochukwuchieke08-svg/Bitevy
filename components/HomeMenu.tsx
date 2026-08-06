@@ -55,13 +55,6 @@ return ( <div className="relative">
       </Link>
 
       <Link
-        href="/signup/rider"
-        className="block px-5 py-4 border-b text-black"
-      >
-        Become a Rider
-      </Link>
-
-      <Link
         href="/rider"
         className="block px-5 py-4 border-b text-black"
       >

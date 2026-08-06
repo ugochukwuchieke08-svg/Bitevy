@@ -15,17 +15,23 @@ export default function OrderActions({
   const router = useRouter();
 
   async function updateStatus(newStatus: string) {
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      status: newStatus,
-    })
-    .eq("id", orderId);
+  const response = await fetch("/api/orders/update-status", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    orderId,
+    status: newStatus,
+  }),
+});
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+const result = await response.json();
+
+if (!response.ok) {
+  alert(result.error);
+  return;
+}
 
   let title = "";
   let message = "";
