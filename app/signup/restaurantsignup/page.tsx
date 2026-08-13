@@ -4,8 +4,14 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import LocationPicker from "@/components/location/LocationPicker";
+
 export default function RestaurantSignupPage() {
   const router = useRouter();
+
+const [latitude, setLatitude] = useState<number | null>(null);
+const [longitude, setLongitude] = useState<number | null>(null);
+const [address, setAddress] = useState("");
 
   const [name, setName] = useState("");
   const [time, setTime] = useState("");
@@ -22,7 +28,6 @@ export default function RestaurantSignupPage() {
     );
   }
   async function handleSubmit() {
-  
 
     if (!user) {
       alert("Please login.");
@@ -31,6 +36,15 @@ export default function RestaurantSignupPage() {
 
     if (!image) {
       alert("Choose an image.");
+      return;
+    }
+
+    if (
+      latitude === null ||
+      longitude === null ||
+      !address
+    ) {
+      alert("Please select your restaurant location.");
       return;
     }
 
@@ -64,6 +78,9 @@ export default function RestaurantSignupPage() {
         rating: 5,
         time,
         delivery,
+        address,
+        latitude,
+        longitude,
       });
 
     if (error) {
@@ -131,6 +148,31 @@ export default function RestaurantSignupPage() {
           onChange={(e) => setDelivery(e.target.value)}
           className="w-full bg-white rounded-2xl p-4 border text-black"
         />
+
+        <input
+          placeholder="Restaurant name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full bg-white rounded-2xl p-4 border text-black"
+        />
+
+        <div className="pt-2">
+          <h2 className="mb-2 text-lg font-bold text-black">
+            Restaurant location
+          </h2>
+
+          <p className="mb-4 text-sm text-gray-500">
+            Select the exact location of your restaurant.
+          </p>
+
+          <LocationPicker
+            onLocationConfirm={({ latitude, longitude, address }) => {
+              setLatitude(latitude);
+              setLongitude(longitude);
+              setAddress(address);
+            }}
+          />
+        </div>
 
         <button
           onClick={handleSubmit}

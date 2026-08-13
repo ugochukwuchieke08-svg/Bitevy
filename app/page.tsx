@@ -1,6 +1,8 @@
 import UserGreeting from "@/components/UserGreeting";
 import RedirectIfNotLoggedIn from "@/components/RedirectIfNotLoggedIn";
 import NotificationBell from "@/components/NotificationBell";
+import { ChevronRight } from "lucide-react";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import CartButton from "@/components/CartButton";
 import BottomNav from "@/components/BottomNav";
 import HomeMenu from "@/components/HomeMenu";
@@ -60,6 +62,17 @@ console.log("PROFILE:", data);
 profile = data;
 }  
 
+let deliveryAddress = null;
+
+if (user) {
+const { data } = await supabase
+  .from("addresses")
+  .select("address")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+deliveryAddress = data?.address ?? null;
+}
 
    
 const { data: foods } = await supabase
@@ -107,6 +120,33 @@ console.log("Error:", error);
 
   <UserGreeting />
 </header >
+
+<section className="px-2 mt-3">
+  <Link
+    href="/location"
+    className="flex min-w-0 w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm border border-gray-100"
+  >
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100">
+      <FontAwesomeIcon
+        icon={faLocationDot}
+        className="text-orange-500"
+      />
+    </div>
+
+    <div className="min-w-0 flex-1 overflow-hidden">
+      <p className="text-xs font-semibold text-gray-500">
+        Deliver to
+      </p>
+
+      <p className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-gray-900">
+        {deliveryAddress || "Choose your delivery location"}
+      </p>
+    </div>
+
+    <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+  </Link>
+</section>
+
 <section className="px-2">
  <Link href="/search">
     <div className="mt-4 flex items-center gap-3 rounded-full bg-gray-100 px-5 py-3 shadow text-gray-500">

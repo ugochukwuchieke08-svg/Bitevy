@@ -5,7 +5,6 @@ import { Star, Clock3, Bike } from "lucide-react";
 
 export default async function RestaurantDashboard() {
   const supabase = await createServerSupabaseClient();
-
 const {
   data: { user },
   error,
@@ -27,7 +26,31 @@ const { data: restaurant } = await supabase
   .eq("owner_id", user.id)
   .single();
 
-  const { data: orders } = await supabase
+if (!restaurant) {
+  return (
+    <main className="min-h-screen bg-[#fff8f0] flex flex-col items-center justify-center px-6">
+
+      <h1 className="text-3xl font-bold text-black">
+        No Restaurant Found
+      </h1>
+
+      <p className="text-gray-500 mt-3 text-center">
+        You haven't registered a restaurant yet.
+      </p>
+
+      <Link
+        href="/signup/restaurantsignup"
+        className="mt-8 bg-green-700 text-white px-6 py-3 rounded-full font-semibold"
+      >
+        Register Restaurant
+      </Link>
+
+    </main>
+  );
+}
+
+// Only runs if restaurant exists
+const { data: orders } = await supabase
   .from("orders")
   .select("status, created_at, restaurant_amount")
   .eq("restaurant_id", restaurant.id);
@@ -44,31 +67,10 @@ const revenueToday =
         order.status === "completed" &&
         order.created_at.startsWith(today)
     )
-    .reduce((sum, order) => sum + (order.restaurant_amount ?? 0), 0) ?? 0;
-
-  if (!restaurant) {
-    return (
-      <main className="min-h-screen bg-[#fff8f0] flex flex-col items-center justify-center px-6">
-
-        <h1 className="text-3xl font-bold text-black">
-          No Restaurant Found
-        </h1>
-
-        <p className="text-gray-500 mt-3 text-center">
-          You haven't registered a restaurant yet.
-        </p>
-
-        <Link
-          href="/signup/restaurantsignup"
-          className="mt-8 bg-green-700 text-white px-6 py-3 rounded-full font-semibold"
-        >
-          Register Restaurant
-        </Link>
-
-      </main>
-    );
-  }
-
+    .reduce(
+      (sum, order) => sum + (order.restaurant_amount ?? 0),
+      0
+    ) ?? 0;
   return (
     <main className="min-h-screen bg-[#fff8f0]">
 

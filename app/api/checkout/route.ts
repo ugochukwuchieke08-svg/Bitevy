@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { calculateRoadDistance } from "@/lib/location/roadDistance";
 import { sendNotification } from "@/lib/sendNotification";
 
 const supabase = createClient(
@@ -9,16 +10,14 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
- const {
+const {
   cart,
   userId,
   name,
   phone,
   address,
   note,
-  deliveryAreaId,
 } = await req.json();
-
     if (!cart?.length) {
       return NextResponse.json(
         { error: "Cart is empty" },
@@ -94,26 +93,96 @@ if (!userId) {
   subtotal += food.price * cartItem.quantity;
 }
 
-const { data: deliveryArea, error: deliveryError } = await supabase
-  .from("delivery_areas")
-  .select("id, fee")
-  .eq("id", deliveryAreaId)
-  .single();
+const restaurantId = foods[0].restaurant_id;
 
-if (deliveryError || !deliveryArea) {
+const { data: customerLocation, error: customerLocationError } =
+  await supabase
+    .from("addresses")
+    .select("latitude, longitude, address")
+    .eq("user_id", userId)
+    .eq("is_default", true)
+    .maybeSingle();
+
+if (
+  customerLocationError ||
+  !customerLocation ||
+  customerLocation.latitude === null ||
+  customerLocation.longitude === null
+) {
   return NextResponse.json(
-    { error: "Invalid delivery area." },
+    { error: "Please select a delivery location before placing your order." },
     { status: 400 }
   );
 }
 
-const SERVICE_FEE = 150;
+const { data: restaurantLocation, error: restaurantLocationError } =
+  await supabase
+    .from("restaurants")
+    .select("latitude, longitude")
+    .eq("id", restaurantId)
+    .single();
 
-const deliveryFee = deliveryArea.fee;
+if (
+  restaurantLocationError ||
+  !restaurantLocation ||
+  restaurantLocation.latitude === null ||
+  restaurantLocation.longitude === null
+) {
+  return NextResponse.json(
+    { error: "This restaurant does not have a delivery location yet." },
+    { status: 400 }
+  );
+}
+
+const route = await calculateRoadDistance(
+  Number(customerLocation.latitude),
+  Number(customerLocation.longitude),
+  Number(restaurantLocation.latitude),
+  Number(restaurantLocation.longitude)
+);
+
+if (!route) {
+  return NextResponse.json(
+    {
+      error:
+        "Unable to calculate delivery distance. Please try again.",
+    },
+    { status: 500 }
+  );
+}
+
+const distanceKm = route.distanceKm;
+let deliveryFee: number;
+
+if (distanceKm <= 1) {
+  deliveryFee = 500;
+} else if (distanceKm <= 2) {
+  deliveryFee = 700;
+} else if (distanceKm <= 3) {
+  deliveryFee = 900;
+} else if (distanceKm <= 5) {
+  deliveryFee = 1200;
+} else if (distanceKm <= 7) {
+  deliveryFee = 1500;
+} else if (distanceKm <= 10) {
+  deliveryFee = 2000;
+} else {
+  deliveryFee = 2500;
+}
+
+const SERVICE_FEE = 150;
 
 const total = subtotal + deliveryFee + SERVICE_FEE;
 
-const restaurantId = foods[0].restaurant_id;
+console.log("🚚 DELIVERY CALCULATED:", {
+  restaurantId,
+  distanceKm,
+  durationMinutes: route.durationMinutes,
+  deliveryFee,
+  subtotal,
+  serviceFee: SERVICE_FEE,
+  total,
+});
 
 const paymentReference =
   "BTV-" +
@@ -138,7 +207,7 @@ const { data: order, error: orderError } = await supabase
     bitevy_amount: SERVICE_FEE,
     restaurant_amount: subtotal,
 
-    delivery_area_id: deliveryArea.id,
+    
 
     status: "pending",
     payment_status: "pending",
