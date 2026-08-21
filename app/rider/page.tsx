@@ -122,99 +122,69 @@ async function acceptOrder(orderId: string) {
 
   setAcceptingId(orderId);
 
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      rider_id: user.id,
-      status: "out_for_delivery",
-    })
-    .eq("id", orderId)
-    .is("rider_id", null);
-
-  if (error) {
-    console.log(error);
-    setAcceptingId(null);
-    return;
-  }
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("user_id")
-    .eq("id", orderId)
-    .single();
-
-  if (orderError || !order) {
-    console.log(orderError);
-    setAcceptingId(null);
-    return;
-  }
-
-  const { error: notificationError } = await supabase
-    .from("notifications")
-    .insert({
-      user_id: order.user_id,
-      order_id: orderId,
-      title: "Rider Assigned",
-      message: "Your rider is on the way.",
-      link: `/orders/${orderId}`,
+  try {
+    const response = await fetch("/api/rider/accept", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId,
+        riderId: user.id,
+      }),
     });
 
-  if (notificationError) {
-    console.log(notificationError);
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || "Unable to accept delivery.");
+      return;
+    }
+
+    console.log("Delivery accepted:", result);
+
+    await loadOrders();
+
+    setActiveTab("deliveries");
+  } catch (error) {
+    console.error("Accept delivery failed:", error);
+    alert("Failed to accept delivery.");
+  } finally {
+    setAcceptingId(null);
   }
-
-  await loadOrders();
-
-  setActiveTab("deliveries");
-  setAcceptingId(null);
 }
 async function markDelivered(orderId: string) {
+  if (!user) return;
+
   setDeliveringId(orderId);
 
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      status: "delivered",
-    })
-    .eq("id", orderId);
-
-  if (error) {
-    console.log(error);
-    setDeliveringId(null);
-    return;
-  }
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .select("user_id")
-    .eq("id", orderId)
-    .single();
-
-  if (orderError || !order) {
-    console.log(orderError);
-    setDeliveringId(null);
-    return;
-  }
-
-  const { error: notificationError } = await supabase
-    .from("notifications")
-    .insert({
-      user_id: order.user_id,
-      order_id: orderId,
-      title: "Order Delivered",
-      message: "Your food has been delivered.",
-      link: `/orders/${orderId}`,
+  try {
+    const response = await fetch("/api/rider/deliver", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId,
+        riderId: user.id,
+      }),
     });
 
-  if (notificationError) {
-    console.log(notificationError);
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error);
+      return;
+    }
+
+    await loadOrders();
+  } catch (error) {
+    console.error("Mark delivered failed:", error);
+    alert("Failed to mark order as delivered.");
+  } finally {
+    setDeliveringId(null);
   }
-
-  await loadOrders();
-
-  setDeliveringId(null);
-} 
-
+}
 if (loading) {
 return ( <main className="p-5"> <h1 className="text-black">
 Loading... </h1> </main>

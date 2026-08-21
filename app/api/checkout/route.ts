@@ -66,31 +66,115 @@ if (restaurantIds.length !== 1) {
 
 let subtotal = 0;
 
+const verifiedOrderItems: {
+  order_id?: string | number;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string | null;
+  portion: string | null;
+  portion_id: number | null;
+}[] = [];
+
 for (const cartItem of cart) {
-  const food = foods.find((f) => f.id === cartItem.id);
-  
+  const food = foods.find(
+    (f) => String(f.id) === String(cartItem.id)
+  );
+
   if (!food) {
     return NextResponse.json(
-      { error: "Food not found" },
+      { error: "Food not found." },
       { status: 400 }
     );
   }
 
-  if (cartItem.quantity <= 0) {
-  return NextResponse.json(
-    { error: "Invalid quantity." },
-    { status: 400 }
-  );
-}
+  if (!cartItem.quantity || cartItem.quantity <= 0) {
+    return NextResponse.json(
+      { error: "Invalid quantity." },
+      { status: 400 }
+    );
+  }
 
-if (!userId) {
-  return NextResponse.json(
-    { error: "User not logged in." },
-    { status: 401 }
-  );
-}
+  if (!userId) {
+    return NextResponse.json(
+      { error: "User not logged in." },
+      { status: 401 }
+    );
+  }
 
-  subtotal += food.price * cartItem.quantity;
+  let unitPrice = Number(food.price);
+  let portionName: string | null = null;
+  let portionId: number | null = null;
+
+  /*
+   * If the customer selected a portion,
+   * verify it against Supabase.
+   */
+  if (cartItem.portion_id) {
+    const { data: option, error: optionError } =
+      await supabase
+        .from("menu_item_options")
+        .select(`
+          id,
+          name,
+          price,
+          menu_item_option_groups!inner (
+            menu_item_id
+          )
+        `)
+        .eq("id", cartItem.portion_id)
+        .single();
+
+    if (optionError || !option) {
+      console.error(
+        "Portion validation failed:",
+        optionError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Selected portion is no longer available.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const optionGroup =
+      Array.isArray(option.menu_item_option_groups)
+        ? option.menu_item_option_groups[0]
+        : option.menu_item_option_groups;
+
+    /*
+     * Make sure the portion actually belongs
+     * to the food being ordered.
+     */
+    if (
+      !optionGroup ||
+      String(optionGroup.menu_item_id) !==
+        String(food.id)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid portion selected." },
+        { status: 400 }
+      );
+    }
+
+    unitPrice = Number(option.price);
+    portionName = option.name;
+    portionId = option.id;
+  }
+
+  subtotal += unitPrice * cartItem.quantity;
+
+  verifiedOrderItems.push({
+    name: food.name,
+    price: unitPrice,
+    quantity: cartItem.quantity,
+    image: cartItem.image ?? null,
+    portion: portionName,
+    portion_id: portionId,
+  });
 }
 
 const restaurantId = foods[0].restaurant_id;
@@ -250,17 +334,10 @@ if (restaurantError) {
   }
 }
 
-const orderItems = cart.map((cartItem: any) => {
-  const food = foods.find((f) => f.id === cartItem.id)!;
-
- return {
+const orderItems = verifiedOrderItems.map((item) => ({
+  ...item,
   order_id: order.id,
-  name: food.name,
-  price: food.price,
-  quantity: cartItem.quantity,
-  image: cartItem.image,
-};
-});
+}));
 
 const { error: orderItemsError } = await supabase
   .from("order_items")

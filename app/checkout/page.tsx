@@ -206,9 +206,11 @@ const confirmAddressAndPlaceOrder = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        cart: cart.map((item) => ({
+      cart: cart.map((item) => ({
           id: item.id,
           quantity: item.quantity,
+          portion: item.portion ?? null,
+          portion_id: item.portion_id ?? null,
         })),
         userId: user.id,
         name,

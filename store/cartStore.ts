@@ -2,21 +2,39 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type CartItem = {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   image: string;
   quantity: number;
-  restaurant_id: number;
+  restaurant_id: string | number;
   restaurant_name: string;
+
+  // Food customization
+portion?: string;
+portion_id?: number;
 };
 
 type CartStore = {
   cart: CartItem[];
+
   addToCart: (item: CartItem) => void;
-  removeFromCart: (name: string) => void;
-  increaseQuantity: (name: string) => void;
-  decreaseQuantity: (name: string) => void;
+
+  removeFromCart: (
+    id: string | number,
+    portion?: string
+  ) => void;
+
+  increaseQuantity: (
+    id: string | number,
+    portion?: string
+  ) => void;
+
+  decreaseQuantity: (
+    id: string | number,
+    portion?: string
+  ) => void;
+
   clearCart: () => void;
 };
 
@@ -27,10 +45,13 @@ export const useCartStore = create<CartStore>()(
 
       addToCart: (item) =>
         set((state) => {
-
+          /*
+           * Bitevy only allows one restaurant per cart.
+           */
           if (
             state.cart.length > 0 &&
-            state.cart[0].restaurant_id !== item.restaurant_id
+            String(state.cart[0].restaurant_id) !==
+              String(item.restaurant_id)
           ) {
             alert(
               "You can only order from one restaurant at a time"
@@ -39,18 +60,39 @@ export const useCartStore = create<CartStore>()(
             return state;
           }
 
-         const existingItem = state.cart.find(
-            (cartItem) => cartItem.id === item.id
+          /*
+           * A cart item is identified by:
+           *
+           * Food ID + Portion
+           *
+           * This means:
+           *
+           * Jollof Rice + Regular
+           *
+           * and
+           *
+           * Jollof Rice + Large
+           *
+           * are treated as different cart items.
+           */
+          const existingItem = state.cart.find(
+            (cartItem) =>
+              String(cartItem.id) === String(item.id) &&
+              (cartItem.portion ?? "Regular") ===
+                (item.portion ?? "Regular")
           );
 
           if (existingItem) {
-
             return {
               cart: state.cart.map((cartItem) =>
-                cartItem.id === item.id
+                String(cartItem.id) === String(item.id) &&
+                (cartItem.portion ?? "Regular") ===
+                  (item.portion ?? "Regular")
                   ? {
                       ...cartItem,
-                      quantity: cartItem.quantity + 1,
+                      quantity:
+                        cartItem.quantity +
+                        item.quantity,
                     }
                   : cartItem
               ),
@@ -62,23 +104,29 @@ export const useCartStore = create<CartStore>()(
               ...state.cart,
               {
                 ...item,
-                quantity: 1,
+                portion: item.portion ?? "Regular",
+                quantity: item.quantity ?? 1,
               },
             ],
           };
         }),
 
-      removeFromCart: (name) =>
+      removeFromCart: (id, portion = "Regular") =>
         set((state) => ({
           cart: state.cart.filter(
-            (item) => item.name !== name
+            (item) =>
+              !(
+                String(item.id) === String(id) &&
+                (item.portion ?? "Regular") === portion
+              )
           ),
         })),
 
-      increaseQuantity: (name) =>
+      increaseQuantity: (id, portion = "Regular") =>
         set((state) => ({
           cart: state.cart.map((item) =>
-            item.name === name
+            String(item.id) === String(id) &&
+            (item.portion ?? "Regular") === portion
               ? {
                   ...item,
                   quantity: item.quantity + 1,
@@ -87,11 +135,12 @@ export const useCartStore = create<CartStore>()(
           ),
         })),
 
-      decreaseQuantity: (name) =>
+      decreaseQuantity: (id, portion = "Regular") =>
         set((state) => ({
           cart: state.cart
             .map((item) =>
-              item.name === name
+              String(item.id) === String(id) &&
+              (item.portion ?? "Regular") === portion
                 ? {
                     ...item,
                     quantity: item.quantity - 1,
@@ -100,13 +149,12 @@ export const useCartStore = create<CartStore>()(
             )
             .filter((item) => item.quantity > 0),
         })),
-    
 
-    clearCart: () =>
-      set(() => ({
+      clearCart: () => ({
         cart: [],
-      })),
       }),
+    }),
+
     {
       name: "cart-storage",
     }

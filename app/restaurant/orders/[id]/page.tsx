@@ -62,48 +62,55 @@ export default async function OrderDetails({
 
       <div className="mt-8 bg-white rounded-3xl shadow p-6">
 
-        <h2 className="text-2xl font-bold text-black mb-5">
-          Ordered Items
-        </h2>
+  <h2 className="text-2xl font-bold text-black mb-5">
+    Ordered Items
+  </h2>
 
-        <div className="space-y-5">
+  <div className="space-y-5">
 
-          {items?.map((item) => (
+    {items?.map((item) => (
 
-            <div
-              key={item.id}
-              className="flex gap-4 items-center"
-            >
+      <div
+        key={item.id}
+        className="flex gap-4 items-center"
+      >
 
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-20 h-20 rounded-2xl object-cover"
-              />
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-20 h-20 rounded-2xl object-cover"
+        />
 
-              <div className="flex-1">
+        <div className="flex-1">
 
-                <h3 className="font-bold text-black">
-                  {item.name}
-                </h3>
+          <h3 className="font-bold text-black">
+            {item.name}
+          </h3>
 
-                <p className="text-gray-500">
-                  Qty: {item.quantity}
-                </p>
+          {/* Portion */}
+          {item.portion && (
+            <p className="mt-1 text-sm font-semibold text-orange-600">
+              {item.portion} Portion
+            </p>
+          )}
 
-              </div>
-
-              <p className="font-black text-green-700">
-                ₦{item.price.toLocaleString()}
-              </p>
-
-            </div>
-
-          ))}
+          <p className="text-gray-500">
+            Qty: {item.quantity}
+          </p>
 
         </div>
 
+       <p className="font-black text-green-700">
+        ₦{(item.price * item.quantity).toLocaleString()}
+      </p>
+
       </div>
+
+    ))}
+
+  </div>
+
+</div>
 
       <div className="mt-8 bg-white rounded-3xl shadow p-6">
 

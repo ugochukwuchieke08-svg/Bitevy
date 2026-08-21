@@ -28,38 +28,38 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
 
 
-  async function handleSignup(){
+  async function handleSignup() {
+  if (loading) return;
 
-
-    setLoading(true);
-
-
-    const { error } = await supabase.auth.signUp({
-
-      email,
-      password,
-
-    });
-
-
-
-    if(error){
-
-      alert(error.message);
-      setLoading(false);
-      return;
-
-    }
-
-
-
-    alert("Account created!");
-
-    router.push("/login");
-
-
+  if (!email || !password) {
+    alert("Please enter your email and password.");
+    return;
   }
 
+  setLoading(true);
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error("Signup error:", error);
+    alert(error.message);
+    setLoading(false);
+    return;
+  }
+
+  console.log("Signup successful:", data);
+
+  setLoading(false);
+
+  // Send user to the email verification screen
+  router.push("/verify-email");
+}
 
 
 
