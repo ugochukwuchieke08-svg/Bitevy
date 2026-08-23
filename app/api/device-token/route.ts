@@ -26,16 +26,16 @@ export async function POST(req: Request) {
     }
 
     const { error } = await supabase
-      .from("device_tokens")
+      .from("user_push_tokens")
       .upsert(
         {
           user_id: user.id,
-          token,
+           fcm_token: token,
           platform: "android",
           is_active: true,
         },
         {
-          onConflict: "token",
+          onConflict: "fcm_token",
         }
       );
 
