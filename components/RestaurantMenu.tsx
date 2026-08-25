@@ -137,45 +137,45 @@ export default function RestaurantMenu({
         </div>
       )}
 
-      {/* Food Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
-        {filteredItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => openFood(item)}
-            className="group w-full overflow-hidden rounded-3xl bg-white text-left shadow transition hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99]"
-          >
-            <div className="relative overflow-hidden">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="h-44 w-full object-cover transition duration-300 group-hover:scale-105 sm:h-48"
-              />
+     {/* Food Cards */}
+<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+  {filteredItems.map((item) => (
+    <button
+      key={item.id}
+      type="button"
+      onClick={() => openFood(item)}
+      className="group w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+    >
+      <div className="relative overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="h-32 w-full object-cover transition duration-300 group-hover:scale-105 sm:h-36"
+        />
 
-              <div className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1.5 text-sm font-bold text-orange-600 shadow">
-                ₦{item.price.toLocaleString()}
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-5">
-              <h3 className="text-lg font-bold text-black">
-                {item.name}
-              </h3>
-
-              {item.description && (
-                <p className="mt-1 line-clamp-2 text-sm leading-5 text-gray-500">
-                  {item.description}
-                </p>
-              )}
-
-              <p className="mt-3 text-sm font-semibold text-orange-600">
-                Tap to customize
-              </p>
-            </div>
-          </button>
-        ))}
+        <div className="absolute bottom-2 right-2 rounded-full bg-white px-2 py-1 text-xs font-bold text-orange-600 shadow">
+          ₦{item.price.toLocaleString()}
+        </div>
       </div>
+
+      <div className="p-3">
+        <h3 className="line-clamp-1 text-sm font-bold text-black">
+          {item.name}
+        </h3>
+
+        {item.description && (
+          <p className="mt-1 line-clamp-1 text-xs text-gray-500">
+            {item.description}
+          </p>
+        )}
+
+        <p className="mt-2 text-xs font-semibold text-orange-600">
+          Customize
+        </p>
+      </div>
+    </button>
+  ))}
+</div>
 
       {/* Food Selection Bottom Sheet */}
       {selectedFood && (

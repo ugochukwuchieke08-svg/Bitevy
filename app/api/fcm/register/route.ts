@@ -1,27 +1,37 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   try {
-    const { userId, token } = await req.json();
+    const { token } = await req.json();
 
-    if (!userId || !token) {
+    if (!token) {
       return NextResponse.json(
-        { error: "Missing userId or token" },
+        { error: "Token is required" },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
+    const supabase = await createServerSupabaseClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { error } = await supabaseAdmin
       .from("user_push_tokens")
       .upsert(
         {
-          user_id: userId,
+          user_id: user.id,
           fcm_token: token,
           platform: "android",
           updated_at: new Date().toISOString(),
@@ -31,14 +41,21 @@ export async function POST(req: Request) {
         }
       );
 
-    if (error) throw error;
+    if (error) {
+      console.error("FCM Register Error:", error);
+
+      return NextResponse.json(
+        { error: "Failed to save token" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("FCM Register Error:", error);
 
     return NextResponse.json(
-      { success: false },
+      { error: "Something went wrong" },
       { status: 500 }
     );
   }

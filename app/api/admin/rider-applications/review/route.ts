@@ -99,6 +99,24 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+// Promote approved user to rider
+if (decision === "approve") {
+  const { error: riderRoleError } = await supabase.rpc(
+    "promote_user_to_rider",
+    {
+      target_user_id: application.user_id,
+    }
+  );
+
+  if (riderRoleError) {
+    console.error("Failed to promote user to rider:", riderRoleError);
+
+    return NextResponse.json(
+      { error: "Failed to assign rider role." },
+      { status: 500 }
+    );
+  }
+}
 
     // Notification content
     const title =

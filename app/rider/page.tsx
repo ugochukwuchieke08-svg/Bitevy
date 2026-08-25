@@ -107,15 +107,74 @@ setLoading(false);
 
 }
 
+async function refreshLiveOrders() {
+  if (!user) return;
+
+  const { data: availableOrders, error: availableError } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      restaurants (
+        id,
+        name
+      ),
+      order_items (
+        name,
+        quantity,
+        price,
+        image
+      )
+    `)
+    .eq("status", "ready")
+    .is("rider_id", null)
+    .order("created_at", { ascending: false });
+
+  if (availableError) {
+    console.error("Failed to refresh available orders:", availableError);
+    return;
+  }
+
+  const { data: myOrders, error: myOrdersError } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      restaurants (
+        id,
+        name
+      ),
+      order_items (
+        name,
+        quantity,
+        price,
+        image
+      )
+    `)
+    .eq("rider_id", user.id)
+    .eq("status", "out_for_delivery")
+    .order("created_at", { ascending: false });
+
+  if (myOrdersError) {
+    console.error("Failed to refresh rider deliveries:", myOrdersError);
+    return;
+  }
+
+  setOrders(availableOrders || []);
+  setMyDeliveries(myOrders || []);
+}
+
 useEffect(() => {
-
-
-loadOrders();
-
-
-
-
+  loadOrders();
 }, []);
+
+useEffect(() => {
+  if (!user || applicationStatus !== "active") return;
+
+  const interval = setInterval(() => {
+    refreshLiveOrders();
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [user, applicationStatus]);
 
 async function acceptOrder(orderId: string) {
   if (!user) return;
