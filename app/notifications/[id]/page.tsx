@@ -8,6 +8,16 @@ export default async function NotificationPage({
 }) {
   const { id } = await params;
 
+  console.log("NOTIFICATION ROUTE ID:", id);
+
+  // Make sure the ID actually exists and is numeric
+  if (!id || !/^\d+$/.test(id)) {
+    console.error("INVALID NOTIFICATION ID:", id);
+    notFound();
+  }
+
+  const notificationId = Number(id);
+
   const supabase = await createServerSupabaseClient();
 
   const {
@@ -18,25 +28,38 @@ export default async function NotificationPage({
     redirect("/login");
   }
 
-  const { data: notification } = await supabase
+  const { data: notification, error } = await supabase
     .from("notifications")
     .select("*")
-    .eq("id", id)
+    .eq("id", notificationId)
     .eq("user_id", user.id)
     .single();
 
-  if (!notification) {
+  console.log("NOTIFICATION:", notification);
+  console.log("NOTIFICATION ERROR:", error);
+
+  if (error || !notification) {
+    console.error("NOTIFICATION NOT FOUND:", {
+      id: notificationId,
+      userId: user.id,
+      error,
+    });
+
     notFound();
   }
 
+  // Mark notification as read
   await supabase
     .from("notifications")
     .update({ read: true })
-    .eq("id", id);
+    .eq("id", notificationId)
+    .eq("user_id", user.id);
 
- if (notification.link) {
-  redirect(notification.link);
-}
+  // If this notification has a destination link, go there
+  if (notification.link) {
+    redirect(notification.link);
+  }
 
-redirect("/notifications");
+  // Otherwise return to notifications
+  redirect("/notifications");
 }

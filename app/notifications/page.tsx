@@ -1,76 +1,63 @@
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import NotificationsList from "@/components/NotificationList";
 
 export default async function NotificationsPage() {
-  const supabase = await createServerSupabaseClient();
+  const supabase =
+    await createServerSupabaseClient();
 
   const {
     data: { user },
-  } = await supabase.auth.getUser(); 
-  
-  await supabase
-  .from("notifications")
-  .update({
-    read: true,
-  })
-  .eq("read", false);
-
-  console.log("Logged in user:",user?.id);
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return <h1>Please login.</h1>;
+    return (
+      <main className="min-h-screen bg-[#fff8f0] p-5 flex items-center justify-center">
+        <div className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50">
+            <Bell
+              size={28}
+              className="text-orange-500"
+            />
+          </div>
+
+          <h1 className="mt-5 text-2xl font-black text-gray-950">
+            Please login
+          </h1>
+
+          <p className="mt-2 text-gray-500">
+            Login to view your notifications.
+          </p>
+
+          <Link
+            href="/login?redirect=/notifications"
+            className="mt-6 inline-flex rounded-2xl bg-green-700 px-6 py-3 font-bold text-white"
+          >
+            Login
+          </Link>
+        </div>
+      </main>
+    );
   }
 
-  const { data: notifications } = await supabase
-    .from("notifications")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-    console.log("Notifications:", notifications);
+  const { data: notifications } =
+    await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .order("created_at", {
+        ascending: false,
+      });
 
   return (
-    <main className="min-h-screen bg-[#fff8f0] p-5">
-
-      <h1 className="text-3xl font-black text-black mb-8">
-        Notifications
-      </h1>
-
-      <div className="space-y-4">
-
-        {notifications?.length === 0 && (
-          <div className="bg-white rounded-3xl p-8 text-center text-gray-500">
-            No notifications yet.
-          </div>
-        )}
-
-        {notifications?.map((notification) => (
-          <Link
-            key={notification.id}
-           href={`/notifications/${notification.id}`}
-           
-            className={`block rounded-3xl p-5 shadow transition ${
-              notification.read
-                ? "bg-white"
-                : "bg-green-50 border-2 border-green-600"
-            }`}
-          >
-            <h2 className="text-xl font-bold text-black">
-              {notification.title}
-            </h2>
-
-            <p className="text-gray-600 mt-2">
-              {notification.message}
-            </p>
-
-            <p className="text-sm text-gray-400 mt-4">
-              {new Date(notification.created_at).toLocaleString()}
-            </p>
-          </Link>
-        ))}
-
+    <main className="min-h-screen bg-[#fff8f0] px-5 py-5 pb-10">
+      <div className="mx-auto max-w-2xl">
+        <NotificationsList
+          notifications={notifications || []}
+        />
       </div>
-
     </main>
   );
 }

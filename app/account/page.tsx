@@ -6,82 +6,82 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
+import ThemeToggle from "@/components/ThemeToggle";
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
-  
   const [loading, setLoading] = useState(true);
+
   const router = useRouter();
+
   const { user, loading: authLoading } = useAuth();
+
   const [orderCount, setOrderCount] = useState(0);
   const [favoriteCount, setFavoriteCount] = useState(0);
-  
-  if (authLoading) {
-  return (
-    <main className="min-h-screen flex items-center justify-center">
-      Loading...
-    </main>
-  );
-}
-  console.log("PROFILE DATA:", profile);
+
   useEffect(() => {
     async function getProfile() {
-      
-
       if (!user) {
         setLoading(false);
         return;
       }
 
-      
-const { data: profile, error } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("id", user.id)
-  .single();
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
+      console.log("PROFILE FROM SUPABASE:", profile);
+      console.log("PROFILE ERROR:", error);
 
-console.log("PROFILE FROM SUPABASE:", profile);
-console.log("PROFILE ERROR:", error);
+      setProfile(profile);
 
+      const { count: favorites } = await supabase
+        .from("restaurant_favorites")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("user_id", user.id);
 
-setProfile(profile);
-setLoading(false);
+      const { count: orders, error: orderError } = await supabase
+        .from("orders")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("user_id", user.id);
 
-// Count favorites
-const { count: favorites } = await supabase
-  .from("restaurant_favorites")
-  .select("*", {
-    count: "exact",
-    head: true,
-  })
-  .eq("user_id", user.id);
+      console.log("Order Count:", orders);
+      console.log("Order Error:", orderError);
 
-// Count orders
-const { count: orders, error: orderError } = await supabase
-  .from("orders")
-  .select("*", {
-    count: "exact",
-    head: true,
-  })
-  .eq("user_id", user.id);
-
-console.log("Order Count:", orders);
-console.log("Order Error:", orderError);
-
-setLoading(false);
-setFavoriteCount(favorites ?? 0);
-setOrderCount(orders ?? 0);
-
-
+      setFavoriteCount(favorites ?? 0);
+      setOrderCount(orders ?? 0);
+      setLoading(false);
     }
 
     getProfile();
   }, [user]);
 
-  if (loading) {
-    return <div className="p-5">Loading...</div>;
+  // CONDITIONAL RETURNS COME AFTER ALL HOOKS
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        Loading...
+      </main>
+    );
   }
-if (!user) {
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        Loading...
+      </main>
+    );
+  }
+
+  if (!user) {
     return (
       <main className="p-5">
         <h1>Please login</h1>
@@ -92,7 +92,13 @@ if (!user) {
       </main>
     );
   }
+
+  console.log("PROFILE DATA:", profile);
+
+  // YOUR EXISTING RETURN STARTS HERE
   return (
+    // ...
+ 
   <main className="min-h-screen bg-[#fff8f0] pb-32">
 
     {/* Header */}
@@ -110,6 +116,8 @@ if (!user) {
         <h1 className="text-2xl font-black text-gray-900">
           My Account
         </h1>
+
+      
 
         <HomeMenu />
 
