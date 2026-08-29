@@ -1,6 +1,7 @@
 
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import RestaurantOpenToggle from "@/components/RestaurantOpenToggle";
 import {
   ArrowLeft,
   ArrowRight,
@@ -153,16 +154,16 @@ export default async function RestaurantDashboard() {
             className="absolute inset-0 w-full h-full object-cover opacity-45"
           />
 
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/25" />
 
           <div className="relative min-h-[300px] sm:min-h-[340px] p-6 sm:p-9 flex flex-col justify-end">
 
             <div className="max-w-2xl">
 
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 text-white px-3 py-1.5 rounded-full text-xs font-bold mb-4">
-                <span className="w-2 h-2 rounded-full bg-green-400" />
-                Restaurant Active
-              </div>
+              <RestaurantOpenToggle
+                restaurantId={restaurant.id}
+                initialIsOpen={restaurant.is_open ?? true}
+              />
 
               <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
                 {restaurant.name}
