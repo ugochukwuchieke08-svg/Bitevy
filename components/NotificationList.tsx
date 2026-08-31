@@ -376,8 +376,7 @@ function SwipeableNotification({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <Link
-          href={`/notifications/${notification.id}`}
+        <div
           className="block p-4"
         >
           <div className="flex gap-4">
@@ -417,7 +416,7 @@ function SwipeableNotification({
               </p>
             </div>
           </div>
-        </Link>
+        </div>
       </div>
     </div>
   );

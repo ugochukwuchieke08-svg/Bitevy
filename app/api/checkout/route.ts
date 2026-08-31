@@ -31,7 +31,7 @@ const foodIds = cart.map((item: any) => item.id);
 // Fetch foods from the database
 const { data: foods, error: foodError } = await supabase
   .from("menu_items")
-  .select("id, restaurant_id, name, price")
+  .select("id, restaurant_id, name, price, image")
   .in("id", foodIds);
 
 
@@ -167,14 +167,14 @@ for (const cartItem of cart) {
 
   subtotal += unitPrice * cartItem.quantity;
 
-  verifiedOrderItems.push({
-    name: food.name,
-    price: unitPrice,
-    quantity: cartItem.quantity,
-    image: cartItem.image ?? null,
-    portion: portionName,
-    portion_id: portionId,
-  });
+ verifiedOrderItems.push({
+  name: food.name,
+  price: unitPrice,
+  quantity: cartItem.quantity,
+  image: food.image ?? null,
+  portion: portionName,
+  portion_id: portionId,
+});
 }
 
 const restaurantId = foods[0].restaurant_id;
@@ -353,10 +353,15 @@ const { error: orderItemsError } = await supabase
   .eq("id", userId);
 
 if (orderItemsError) {
-  console.log(orderItemsError);
+  console.error("ORDER ITEMS ERROR:", orderItemsError);
 
   return NextResponse.json(
-    { error: "Unable to create order items." },
+    {
+      error: "Unable to create order items.",
+      details: orderItemsError.message,
+      code: orderItemsError.code,
+      hint: orderItemsError.hint,
+    },
     { status: 400 }
   );
 }
