@@ -9,7 +9,7 @@ export default async function LoginPage({
 
   return (
     <LoginForm
-      redirect={params.redirect ?? "/"}
+     redirect={params.redirect ?? "/home"}
     />
   );
 }

@@ -47,7 +47,7 @@ const [banner, setBanner] = useState<{
     >
       <div
         className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
-          isActive("/")
+          isActive("/home")
             ? "bg-white/20 scale-105"
             : "hover:bg-white/10"
         }`}
