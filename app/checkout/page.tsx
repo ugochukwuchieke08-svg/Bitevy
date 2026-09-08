@@ -230,37 +230,32 @@ const confirmAddressAndPlaceOrder = async () => {
     console.log("Checkout result:", result);
 
     const payment = await fetch("/api/opay/initiate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        orderId: result.orderId,
-        paymentReference: result.paymentReference,
-        total: result.total,
-        customerName: name,
-        customerPhone: phone,
-        customerEmail: user.email,
-      }),
-    });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+ body: JSON.stringify({
+  orderId: result.orderId,
+  customerName: name,
+  customerPhone: phone,
+  customerEmail: user.email,
+}),
+});
 
-    const paymentResult = await payment.json();
+const paymentResult = await payment.json();
 
-    if (!payment.ok) {
-      alert(paymentResult.error);
-      return;
-    }
+if (!payment.ok) {
+  alert(paymentResult.error || "Unable to initialize payment.");
+  return;
+}
 
-    setShowAddressModal(false);
+setShowAddressModal(false);
 
-    if (paymentResult.bypass) {
-      clearCart();
-      router.push("/order-success");
-      return;
-    }
-
-    clearCart();
-    router.push(paymentResult.paymentUrl);
+// DO NOT clear the cart yet.
+// The customer has not successfully paid.
+if (paymentResult.paymentLink) {
+  window.location.href = paymentResult.paymentLink;
+}
 
   } catch (error) {
     console.error(error);
