@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +29,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
+    // Use the Supabase service-role key.
+    // This route runs on the server and needs permission
+    // to update the order after payment verification.
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Find the Bitevy order using Flutterwave's transaction reference
     const { data: order, error: orderError } = await supabase
@@ -122,8 +128,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // VERY IMPORTANT:
-    // The amount paid must match the amount Bitevy expected.
+    // The amount paid must match the amount Bitevy expected
     if (Number(transaction.amount) !== Number(order.total)) {
       console.error("PAYMENT AMOUNT MISMATCH:", {
         orderTotal: order.total,
