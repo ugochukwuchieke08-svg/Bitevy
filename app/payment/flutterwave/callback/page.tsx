@@ -13,15 +13,9 @@ export default function FlutterwaveCallbackPage() {
     const verifyPayment = async () => {
       const transactionId = searchParams.get("transaction_id");
       const txRef = searchParams.get("tx_ref");
-      const status = searchParams.get("status");
 
       if (!transactionId || !txRef) {
         setMessage("Payment information is missing.");
-        return;
-      }
-
-      if (status !== "successful") {
-        setMessage("Payment was not successful.");
         return;
       }
 
