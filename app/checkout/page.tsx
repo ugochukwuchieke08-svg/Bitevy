@@ -229,7 +229,7 @@ const confirmAddressAndPlaceOrder = async () => {
 
     console.log("Checkout result:", result);
 
-    const payment = await fetch("/api/opay/initiate", {
+    const payment = await fetch("/api/flutterwave/initiate", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
