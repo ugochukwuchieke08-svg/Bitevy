@@ -275,7 +275,7 @@ if (applicationStatus === "none") {
         </a>
 
         <a
-          href="/"
+          href="/home"
           className="mt-3 block w-full rounded-2xl border border-slate-300 py-4 text-center font-semibold text-gray-700 mtext-slate-700 transition hover:bg-slate-50"
         >
           Back to Home
@@ -307,7 +307,7 @@ if (applicationStatus === "pending") {
         </p>
 
         <a
-          href="/"
+          href="/home"
           className="mt-8 block w-full rounded-2xl border border-slate-300 py-4 text-center font-semibold text-slate-700 transition hover:bg-slate-50"
         >
           Back to Home
@@ -334,7 +334,7 @@ if (applicationStatus === "rejected") {
         </p>
 
         <a
-          href="/"
+          href="/home"
           className="mt-8 block w-full rounded-2xl bg-orange-500 py-4 text-center font-semibold text-white transition hover:bg-orange-600"
         >
           Back to Bitevy

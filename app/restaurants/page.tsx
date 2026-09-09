@@ -32,7 +32,7 @@ export default async function RestaurantsPage() {
             <div className="flex items-center justify-between">
 
               <Link
-                href="/"
+                href="/home"
                 className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center active:scale-95 transition"
               >
                 <FontAwesomeIcon

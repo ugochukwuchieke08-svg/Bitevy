@@ -30,7 +30,7 @@ export default function CartPage() {
         {/* Header */}
         <div className="mb-6 flex items-center gap-3 sm:gap-4">
           <Link
-            href="/"
+            href="/home"
             className="flex h-10 shrink-0 items-center justify-center rounded-full bg-white px-4 text-sm font-semibold text-black shadow transition active:scale-95"
           >
             ← Back

@@ -149,7 +149,7 @@ export default function NotificationsList({
       <div className="flex items-center justify-between mb-7">
         <div className="flex items-center gap-3">
           <Link
-            href="/"
+            href="/home"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-gray-900 shadow-sm"
           >
             <ArrowLeft

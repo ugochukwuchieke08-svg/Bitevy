@@ -19,7 +19,7 @@ export default function OrderSuccessPage() {
         </p>
 
         <Link
-          href="/"
+          href="/home"
           className="block mt-6 bg-green-700 text-white py-4 rounded-full font-bold"
         >
           Back Home

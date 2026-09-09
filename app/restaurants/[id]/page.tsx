@@ -100,7 +100,7 @@ if (
         />
 
        <Link
-        href="/"
+        href="/home"
         className="absolute top-4 left-4 bg-white rounded-full p-3 shadow-lg hover:scale-105 transition"
       >
         <ArrowLeft className="w-5 h-5 text-black" />

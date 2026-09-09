@@ -25,7 +25,7 @@ export default function RestaurantHeader({
     <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm px-5 py-4 flex items-center justify-between">
 
       <Link
-        href="/"
+        href="/home"
         className="bg-gray-100 rounded-full px-4 py-2 text-black"
       >
         ←

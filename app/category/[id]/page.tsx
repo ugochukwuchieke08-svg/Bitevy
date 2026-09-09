@@ -35,7 +35,7 @@ export default async function CategoryPage({
 
       <div className="mb-8">
         <Link
-          href="/"
+          href="/home"
           className="text-orange-600 font-semibold"
         >
           ← Back

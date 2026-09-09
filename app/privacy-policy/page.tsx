@@ -8,7 +8,7 @@ export default function PrivacyPolicyPage() {
       <header className="border-b">
         <div className="mx-auto max-w-4xl px-6 py-10">
           <Link
-            href="/"
+            href="/home"
             className="text-sm text-orange-600 hover:underline"
           >
             ← Back to Home

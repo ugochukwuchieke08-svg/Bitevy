@@ -40,7 +40,7 @@ const [banner, setBanner] = useState<{
 
     {/* Home */}
     <Link
-      href="/"
+      href="/home"
       className={`flex flex-col items-center transition-all duration-200 ${
         isActive("/") ? "text-white" : "text-white/70"
       }`}

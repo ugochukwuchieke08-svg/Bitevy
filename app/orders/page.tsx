@@ -329,7 +329,7 @@ export default function OrdersPage() {
             </p>
 
             <Link
-              href="/"
+              href="/home"
               className="inline-block mt-6 bg-green-700 text-white px-6 py-3 rounded-2xl font-bold"
             >
               Start ordering
