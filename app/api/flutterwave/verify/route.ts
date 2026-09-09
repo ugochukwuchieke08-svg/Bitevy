@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendNotification } from "@/lib/sendNotification";
 
 export async function POST(req: Request) {
   try {
@@ -29,9 +30,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Use the Supabase service-role key.
-    // This route runs on the server and needs permission
-    // to update the order after payment verification.
+    // Server-side Supabase client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -41,7 +40,15 @@ export async function POST(req: Request) {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(
-        "id, total, payment_status, payment_reference, payment_method"
+        `
+        id,
+        total,
+        payment_status,
+        payment_reference,
+        payment_method,
+        restaurant_id,
+        customer_name
+        `
       )
       .eq("payment_reference", txRef)
       .single();
@@ -166,6 +173,46 @@ export async function POST(req: Request) {
         },
         { status: 500 }
       );
+    }
+
+    /*
+     * PAYMENT IS NOW VERIFIED AND THE ORDER IS PAID.
+     *
+     * Only now do we notify the restaurant.
+     */
+
+    const { data: restaurant, error: restaurantError } = await supabase
+      .from("restaurants")
+      .select("owner_id, name")
+      .eq("id", order.restaurant_id)
+      .single();
+
+    if (restaurantError) {
+      console.error(
+        "Failed to fetch restaurant for notification:",
+        restaurantError
+      );
+    } else if (restaurant?.owner_id) {
+      try {
+        await sendNotification({
+          userId: restaurant.owner_id,
+          title: "New Order Received 🍔",
+          body: `${order.customer_name} placed a new order.`,
+          data: {
+            orderId: order.id.toString(),
+            type: "new_order",
+          },
+        });
+
+        console.log(
+          `Restaurant notification sent for order ${order.id}`
+        );
+      } catch (notificationError) {
+        console.error(
+          "Failed to send restaurant notification:",
+          notificationError
+        );
+      }
     }
 
     return NextResponse.json({
