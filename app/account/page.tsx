@@ -7,6 +7,15 @@ import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
+import {
+  User,
+  Package,
+  Heart,
+  Star,
+  ChevronRight,
+  Trash2,
+} from "lucide-react";
+
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +116,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-between">
 
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/home")}
           className="h-11 w-11 rounded-full bg-white shadow-md flex items-center justify-center text-gray-700"
         >
           ←
@@ -131,7 +140,7 @@ export default function AccountPage() {
     <div className="flex flex-col items-center text-center">
       {/* Profile Icon */}
       <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center shadow-lg">
-        <span className="text-5xl">👤</span>
+        <User className="h-12 w-12 text-orange-500" strokeWidth={2.5} />
       </div>
 
       {/* User Info */}
@@ -186,8 +195,8 @@ export default function AccountPage() {
 
         <div className="rounded-3xl bg-white p-5 text-center shadow">
 
-          <h3 className="text-3xl font-black text-orange-500">
-            ★
+          <h3 className="flex justify-center text-orange-500">
+            <Star className="h-8 w-8 fill-current" strokeWidth={2.5} />
           </h3>
 
           <p className="mt-2 text-sm text-gray-500">
@@ -249,8 +258,8 @@ export default function AccountPage() {
           <div className="flex items-center gap-4">
 
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
-              📦
-            </div>
+            <Package className="h-6 w-6 text-orange-500" strokeWidth={2.5} />
+          </div>
 
             <span className="font-semibold text-gray-700">
               My Orders
@@ -258,9 +267,7 @@ export default function AccountPage() {
 
           </div>
 
-          <span className="text-xl text-gray-400">
-            ›
-          </span>
+          <ChevronRight className="h-5 w-5 text-gray-400" />
 
         </Link>
 
@@ -271,8 +278,8 @@ export default function AccountPage() {
           <div className="flex items-center gap-4">
 
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100">
-              ❤️
-            </div>
+            <Heart className="h-6 w-6 text-orange-500" strokeWidth={2.5} />
+          </div>
 
             <span className="font-semibold text-gray-700">
               Favorites
@@ -280,9 +287,7 @@ export default function AccountPage() {
 
           </div>
 
-          <span className="text-xl text-gray-400">
-            ›
-          </span>
+         <ChevronRight className="h-5 w-5 text-gray-400" />
 
         </Link>
   
@@ -311,8 +316,8 @@ export default function AccountPage() {
 
                 </div>
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-2xl">
-                  🗑️
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100">
+                  <Trash2 className="h-6 w-6 text-red-500" strokeWidth={2.5} />
                 </div>
 
               </div>

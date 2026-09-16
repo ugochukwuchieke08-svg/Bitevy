@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { sendNotification } from "@/lib/sendNotification";
 
 export async function POST(req: Request) {
@@ -7,7 +9,7 @@ export async function POST(req: Request) {
     const { transactionId, txRef } = await req.json();
 
     if (!transactionId || !txRef) {
-      return NextResponse.json(
+      return NextResponse.json( 
         {
           success: false,
           error: "Missing transaction information.",
@@ -16,7 +18,54 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!/^\d+$/.test(String(transactionId))) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid transaction ID.",
+        },
+        { status: 400 }
+      );
+    }
+
     const secretKey = process.env.FLW_SECRET_KEY;
+    const cookieStore = await cookies();
+
+const authSupabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Route Handler may not allow setting cookies here.
+        }
+      },
+    },
+  }
+);
+
+const {
+  data: { user },
+  error: authError,
+} = await authSupabase.auth.getUser();
+
+if (authError || !user) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "You must be logged in to verify this payment.",
+    },
+    { status: 401 }
+  );
+}
 
     if (!secretKey) {
       console.error("FLW_SECRET_KEY is missing");
@@ -42,7 +91,10 @@ export async function POST(req: Request) {
       .select(
         `
         id,
+        user_id,
         total,
+        restaurant_amount,
+        rider_amount,
         payment_status,
         payment_reference,
         payment_method,
@@ -51,6 +103,7 @@ export async function POST(req: Request) {
         `
       )
       .eq("payment_reference", txRef)
+      .eq("user_id", user.id)
       .single();
 
     if (orderError || !order) {
@@ -102,6 +155,22 @@ export async function POST(req: Request) {
 
     const transaction = data.data;
 
+    if (!transaction || String(transaction.id) !== String(transactionId)) {
+    console.error("TRANSACTION ID MISMATCH:", {
+      requestedTransactionId: transactionId,
+      returnedTransactionId: transaction?.id,
+      orderId: order.id,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Transaction verification mismatch.",
+      },
+      { status: 400 }
+    );
+  }
+
     // Payment must actually be successful
     if (transaction.status !== "successful") {
       return NextResponse.json(
@@ -135,6 +204,25 @@ export async function POST(req: Request) {
       );
     }
 
+    if (
+      !transaction.id ||
+      String(transaction.id) !== String(transactionId)
+    ) {
+      console.error("TRANSACTION ID MISMATCH:", {
+        requestedTransactionId: transactionId,
+        verifiedTransactionId: transaction.id,
+        orderId: order.id,
+      });
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Verified transaction does not match the requested transaction.",
+    },
+    { status: 400 }
+  );
+}
+
     // The amount paid must match the amount Bitevy expected
     if (Number(transaction.amount) !== Number(order.total)) {
       console.error("PAYMENT AMOUNT MISMATCH:", {
@@ -147,6 +235,29 @@ export async function POST(req: Request) {
         {
           success: false,
           error: "Payment amount does not match the order.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isFinite(Number(order.restaurant_amount)) ||
+      !Number.isFinite(Number(order.rider_amount)) ||
+      Number(order.restaurant_amount) <= 0 ||
+      Number(order.rider_amount) < 0 ||
+      Number(order.restaurant_amount) + Number(order.rider_amount) > Number(order.total)
+    ) {
+      console.error("INVALID ORDER SPLIT AMOUNTS:", {
+        orderId: order.id,
+        total: order.total,
+        restaurantAmount: order.restaurant_amount,
+        riderAmount: order.rider_amount,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid order payout amounts.",
         },
         { status: 400 }
       );

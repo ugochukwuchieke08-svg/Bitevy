@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
@@ -32,6 +34,43 @@ export async function POST(req: Request) {
       );
     }
 
+    const cookieStore = await cookies();
+
+const authSupabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server Component / Route Handler may not allow setting cookies here.
+        }
+      },
+    },
+  }
+);
+
+const {
+  data: { user },
+  error: authError,
+} = await authSupabase.auth.getUser();
+
+if (authError || !user) {
+  return NextResponse.json(
+    {
+      error: "You must be logged in to make a payment.",
+    },
+    { status: 401 }
+  );
+}
+
     // Server-side Supabase client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,12 +79,21 @@ export async function POST(req: Request) {
 
     // Get the real order from Supabase
     const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .select(
-        "id, total, payment_reference, payment_status, customer_name, phone"
-      )
-      .eq("id", orderId)
-      .single();
+    .from("orders")
+    .select(`
+      id,
+      user_id,
+      total,
+      payment_reference,
+      payment_status,
+      customer_name,
+      phone,
+      restaurant_id,
+      restaurant_amount
+    `)
+    .eq("id", orderId)
+    .eq("user_id", user.id)
+    .single();
 
     if (orderError || !order) {
       console.error("Order lookup failed:", orderError);
@@ -57,6 +105,39 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+ 
+   const { data: restaurant, error: restaurantError } = await supabase
+  .from("restaurants")
+  .select("id, flutterwave_subaccount_id, payout_status")
+  .eq("id", order.restaurant_id)
+  .single();
+
+if (restaurantError || !restaurant) {
+  console.error(
+    "Restaurant lookup failed:",
+    restaurantError
+  );
+
+  return NextResponse.json(
+    {
+      error: "Restaurant not found.",
+    },
+    { status: 404 }
+  );
+}
+
+if (
+  typeof restaurant.flutterwave_subaccount_id !== "string" ||
+  !restaurant.flutterwave_subaccount_id.trim() ||
+  restaurant.payout_status !== "active"
+) {
+  return NextResponse.json(
+    {
+      error: "Restaurant payout account is not active.",
+    },
+    { status: 400 }
+  );
+}
 
     // Don't initialize payment for an already-paid order
     if (order.payment_status === "paid") {
@@ -67,6 +148,27 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    if (
+  !Number.isFinite(Number(order.total)) ||
+  !Number.isFinite(Number(order.restaurant_amount)) ||
+  Number(order.total) <= 0 ||
+  Number(order.restaurant_amount) <= 0 ||
+  Number(order.restaurant_amount) > Number(order.total)
+) {
+  console.error("INVALID PAYMENT AMOUNTS:", {
+    orderId: order.id,
+    total: order.total,
+    restaurantAmount: order.restaurant_amount,
+  });
+
+  return NextResponse.json(
+    {
+      error: "Invalid order payment amount.",
+    },
+    { status: 400 }
+  );
+}
 
     // Make sure the order actually has a payment reference
     if (!order.payment_reference) {
@@ -107,6 +209,14 @@ export async function POST(req: Request) {
             name: customerName,
             phonenumber: customerPhone || order.phone,
           },
+
+          subaccounts: [
+            {
+              id: restaurant.flutterwave_subaccount_id,
+              transaction_charge_type: "flat_subaccount",
+              transaction_charge: Number(order.restaurant_amount),
+            },
+          ],
 
           customizations: {
             title: "Bitevy",

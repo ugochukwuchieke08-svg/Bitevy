@@ -290,6 +290,7 @@ const { data: order, error: orderError } = await supabase
     service_fee: SERVICE_FEE,
     bitevy_amount: SERVICE_FEE,
     restaurant_amount: subtotal,
+    rider_amount: deliveryFee,
 
     
 

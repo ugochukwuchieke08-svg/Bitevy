@@ -41,11 +41,17 @@ export default async function RestaurantDashboard() {
   console.log("Dashboard user:", user.id);
   console.log("Dashboard error:", error);
 
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("*")
-    .eq("owner_id", user.id)
-    .single();
+const {
+  data: restaurant,
+  error: restaurantError,
+} = await supabase
+  .from("restaurants")
+  .select("*")
+  .eq("owner_id", user.id)
+  .single();
+
+console.log("RESTAURANT FROM DATABASE:", restaurant);
+console.log("RESTAURANT QUERY ERROR:", restaurantError);
 
   if (!restaurant) {
     return (
