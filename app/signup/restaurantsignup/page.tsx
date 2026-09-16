@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import LocationPicker from "@/components/location/LocationPicker";
+
 export default function RestaurantSignupPage() {
   const router = useRouter();
 
@@ -14,7 +15,6 @@ const [address, setAddress] = useState("");
 
 const [name, setName] = useState("");
 const [time, setTime] = useState("");
-const [delivery, setDelivery] = useState("");
 
 const [image, setImage] = useState<File | null>(null);
 const [preview, setPreview] = useState("");
@@ -32,6 +32,38 @@ const [accountName, setAccountName] = useState("");
 const [loadingBanks, setLoadingBanks] = useState(true);
 const [verifyingAccount, setVerifyingAccount] = useState(false);
 const [accountVerified, setAccountVerified] = useState(false);
+const [bankSearch, setBankSearch] = useState("");
+const [showBankList, setShowBankList] = useState(false);
+
+const bankPickerRef = useRef<HTMLDivElement>(null);
+const filteredBanks = banks.filter((bank) =>
+  bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+);
+
+useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (
+      bankPickerRef.current &&
+      !bankPickerRef.current.contains(event.target as Node)
+    ) {
+      setShowBankList(false);
+    }
+  }
+
+  function handleEscape(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      setShowBankList(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("keydown", handleEscape);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("keydown", handleEscape);
+  };
+}, []);
 
   useEffect(() => {
   async function loadBanks() {
@@ -127,17 +159,16 @@ if (!accountVerified) {
     });
    const { data, error } = await supabase
   .from("restaurants")
-  .insert({
-    owner_id: user.id,
-    name,
-    image: imageUrl,
-    rating: 5,
-    time,
-    delivery,
-    address,
-    latitude,
-    longitude,
-  })
+ .insert({
+  owner_id: user.id,
+  name,
+  image: imageUrl,
+  rating: 5,
+  time,
+  address,
+  latitude,
+  longitude,
+})
   .select()
   .single();
 
@@ -309,12 +340,6 @@ router.push("/restaurant/dashboard");
           className="w-full bg-white rounded-2xl p-4 border text-black"
         />
 
-        <input
-          placeholder="Delivery fee (e.g. ₦1000)"
-          value={delivery}
-          onChange={(e) => setDelivery(e.target.value)}
-          className="w-full bg-white rounded-2xl p-4 border text-black"
-        />
 <div className="space-y-4 pt-2">
   <h2 className="text-lg font-bold text-black">
     Restaurant payout account
@@ -324,26 +349,56 @@ router.push("/restaurant/dashboard");
     This is where your restaurant earnings will be paid.
   </p>
 
-  <select
-    value={bankCode}
+ <div ref={bankPickerRef} className="relative">
+  <input
+    type="text"
+    placeholder={
+      loadingBanks ? "Loading banks..." : "Search for your bank"
+    }
+    value={bankSearch}
+    disabled={loadingBanks}
+    onFocus={() => {
+      if (!bankCode) {
+        setShowBankList(true);
+      }
+    }}
     onChange={(e) => {
-      setBankCode(e.target.value);
+      setBankSearch(e.target.value);
+      setBankCode("");
       setAccountVerified(false);
       setAccountName("");
+      setShowBankList(true);
     }}
-    disabled={loadingBanks}
-    className="w-full bg-white rounded-2xl p-4 border text-black"
-  >
-    <option value="">
-      {loadingBanks ? "Loading banks..." : "Select your bank"}
-    </option>
+    className="w-full bg-white rounded-2xl p-4 border text-black outline-none focus:border-orange-500"
+  />
 
-    {banks.map((bank) => (
-      <option key={bank.code} value={bank.code}>
-        {bank.name}
-      </option>
-    ))}
-  </select>
+  {showBankList && !loadingBanks && (
+    <div className="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto bg-white rounded-2xl border border-black/10 shadow-xl">
+      {filteredBanks.length > 0 ? (
+        filteredBanks.map((bank) => (
+          <button
+            key={bank.code}
+            type="button"
+            onClick={() => {
+              setBankCode(bank.code);
+              setBankSearch(bank.name);
+              setShowBankList(false);
+              setAccountVerified(false);
+              setAccountName("");
+            }}
+            className="w-full text-left px-4 py-3 hover:bg-orange-50 active:bg-orange-100 transition text-black"
+          >
+            {bank.name}
+          </button>
+        ))
+      ) : (
+        <p className="p-4 text-sm text-gray-500">
+          No bank found.
+        </p>
+      )}
+    </div>
+  )}
+</div>
 
   <input
     placeholder="Account number"
