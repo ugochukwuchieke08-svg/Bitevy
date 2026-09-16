@@ -264,15 +264,42 @@ if (authError || !user) {
     }
 
     // Mark the order as paid
-    const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        payment_status: "paid",
-        payment_method: "flutterwave",
-        paid_at: new Date().toISOString(),
-      })
-      .eq("id", order.id)
-      .eq("payment_status", "pending");
+  const { data: updatedOrder, error: updateError } = await supabase
+  .from("orders")
+  .update({
+    payment_status: "paid",
+    payment_method: "flutterwave",
+    paid_at: new Date().toISOString(),
+  })
+  .eq("id", order.id)
+  .eq("payment_status", "pending")
+  .select("id")
+  .maybeSingle();
+
+if (updateError) {
+  console.error("Failed to update order:", updateError);
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Payment verified but order could not be updated.",
+    },
+    { status: 500 }
+  );
+}
+
+// Another process (for example the webhook) already marked it as paid.
+if (!updatedOrder) {
+  console.log(
+    `Order ${order.id} was already processed by another payment handler.`
+  );
+
+  return NextResponse.json({
+    success: true,
+    message: "Payment has already been verified.",
+    orderId: order.id,
+  });
+};
 
     if (updateError) {
       console.error("Failed to update order:", updateError);
