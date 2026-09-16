@@ -85,9 +85,9 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
   }
 
   const { data: orders } = await supabase
-    .from("orders")
-    .select("status, created_at, restaurant_amount")
-    .eq("restaurant_id", restaurant.id);
+  .from("orders")
+  .select("status, created_at, restaurant_amount, payment_status")
+  .eq("restaurant_id", restaurant.id);
 
   const pendingOrders =
     orders?.filter(
@@ -118,6 +118,19 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
           sum + (order.restaurant_amount ?? 0),
         0
       ) ?? 0;
+
+      const totalEarnings =
+  orders
+    ?.filter(
+      (order) =>
+        order.payment_status === "paid" &&
+        order.status === "completed"
+    )
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.restaurant_amount ?? 0),
+      0
+    ) ?? 0;
 
   const totalOrders = orders?.length ?? 0;
 
@@ -225,7 +238,7 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
 
             <StatCard
               label="New Orders"
@@ -257,6 +270,14 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
               icon={<Wallet className="w-5 h-5" />}
               iconClass="bg-purple-50 text-purple-600"
               valueClass="text-black"
+            />
+
+            <StatCard
+              label="Total Earnings"
+              value={`₦${totalEarnings.toLocaleString()}`}
+              icon={<Wallet className="w-5 h-5" />}
+              iconClass="bg-green-50 text-green-600"
+              valueClass="text-green-600"
             />
 
           </div>

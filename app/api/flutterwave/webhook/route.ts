@@ -145,28 +145,38 @@ export async function POST(req: Request) {
     }
 
     // Mark order as paid
-    const { error: updateError } = await supabase
-      .from("orders")
-      .update({
-        payment_status: "paid",
-        payment_method: "flutterwave",
-        paid_at: new Date().toISOString(),
-      })
-      .eq("id", order.id)
-      .eq("payment_status", "pending");
+   const { data: updatedOrder, error: updateError } = await supabase
+  .from("orders")
+  .update({
+    payment_status: "paid",
+    payment_method: "flutterwave",
+    paid_at: new Date().toISOString(),
+  })
+  .eq("id", order.id)
+  .eq("payment_status", "pending")
+  .select("id")
+  .maybeSingle();
 
-    if (updateError) {
-      console.error(
-        "WEBHOOK ORDER UPDATE FAILED:",
-        updateError
-      );
+if (updateError) {
+  console.error(
+    "WEBHOOK ORDER UPDATE FAILED:",
+    updateError
+  );
 
-      return NextResponse.json(
-        { success: false },
-        { status: 500 }
-      );
-    }
+  return NextResponse.json(
+    { success: false },
+    { status: 500 }
+  );
+}
 
+// Another webhook request already processed this payment.
+if (!updatedOrder) {
+  console.log(
+    `Webhook already processed order ${order.id}`
+  );
+
+  return NextResponse.json({ success: true });
+}
     // Notify restaurant only after successful payment update
     const { data: restaurant, error: restaurantError } =
       await supabase
