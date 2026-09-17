@@ -119,12 +119,10 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
         0
       ) ?? 0;
 
-      const totalEarnings =
+     const totalEarnings =
   orders
     ?.filter(
-      (order) =>
-        order.payment_status === "paid" &&
-        order.status === "completed"
+      (order) => order.payment_status === "paid"
     )
     .reduce(
       (sum, order) =>
