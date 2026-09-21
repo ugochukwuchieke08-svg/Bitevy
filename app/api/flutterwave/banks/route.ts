@@ -2,12 +2,26 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    const secretKey = process.env.FLW_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error("FLW_SECRET_KEY is missing.");
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Flutterwave configuration is missing.",
+        },
+        { status: 500 }
+      );
+    }
+
     const response = await fetch(
       "https://api.flutterwave.com/v3/banks/NG",
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
+          Authorization: `Bearer ${secretKey}`,
           "Content-Type": "application/json",
         },
         cache: "no-store",
@@ -16,13 +30,19 @@ export async function GET() {
 
     const data = await response.json();
 
-    if (!response.ok || data.status !== "success") {
-      console.error("FLUTTERWAVE BANKS ERROR:", data);
+    console.log("FLUTTERWAVE BANKS RESPONSE:", {
+      status: response.status,
+      data,
+    });
 
+    if (!response.ok || data.status !== "success") {
       return NextResponse.json(
         {
           success: false,
-          message: data.message || "Unable to fetch banks.",
+          message:
+            data.message ||
+            data.data?.message ||
+            "Flutterwave could not load the banks.",
         },
         { status: 400 }
       );

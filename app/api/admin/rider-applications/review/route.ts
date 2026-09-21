@@ -55,7 +55,15 @@ export async function POST(req: NextRequest) {
     const { data: application, error: applicationError } =
       await supabaseAdmin
         .from("rider_applications")
-        .select("id, user_id, status")
+        .select(`
+          id,
+          user_id,
+          status,
+          bank_code,
+          bank_name,
+          account_number,
+          account_name
+        `)
         .eq("id", applicationId)
         .single();
 
@@ -76,6 +84,64 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Create Flutterwave payout beneficiary
+let flutterwaveBeneficiaryId: string | null = null;
+
+if (decision === "approve") {
+  if (
+    !application.bank_code ||
+    !application.bank_name ||
+    !application.account_number ||
+    !application.account_name
+  ) {
+    return NextResponse.json(
+      { error: "Rider bank details are incomplete." },
+      { status: 400 }
+    );
+  }
+
+  const flutterwaveResponse = await fetch(
+    "https://api.flutterwave.com/v3/beneficiaries",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        account_bank: application.bank_code,
+        account_number: application.account_number,
+        beneficiary_name: application.account_name,
+        currency: "NGN",
+        bank_name: application.bank_name,
+      }),
+    }
+  );
+
+  const flutterwaveData = await flutterwaveResponse.json();
+
+  console.log("FLUTTERWAVE BENEFICIARY RESPONSE:", {
+    status: flutterwaveResponse.status,
+    data: flutterwaveData,
+  });
+
+  if (
+    !flutterwaveResponse.ok ||
+    flutterwaveData.status !== "success"
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          flutterwaveData.message ||
+          "Failed to create Flutterwave payout beneficiary.",
+      },
+      { status: 400 }
+    );
+  }
+
+  flutterwaveBeneficiaryId = String(flutterwaveData.data.id);
+}
+
     const newStatus =
       decision === "approve" ? "active" : "rejected";
 
@@ -88,6 +154,7 @@ export async function POST(req: NextRequest) {
           decision === "approve" ? new Date().toISOString() : null,
         approved_by:
           decision === "approve" ? user.id : null,
+          flutterwave_beneficiary_id: flutterwaveBeneficiaryId,
       })
       .eq("id", applicationId);
 

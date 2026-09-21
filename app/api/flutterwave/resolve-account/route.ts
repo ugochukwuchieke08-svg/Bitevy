@@ -24,6 +24,23 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!process.env.FLW_SECRET_KEY) {
+      console.error("FLW_SECRET_KEY is missing.");
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Flutterwave configuration is missing.",
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log("VERIFYING BANK ACCOUNT:", {
+      bankCode,
+      accountNumber,
+    });
+
     const response = await fetch(
       "https://api.flutterwave.com/v3/accounts/resolve",
       {
@@ -41,15 +58,23 @@ export async function POST(req: Request) {
 
     const data = await response.json();
 
+    console.log("FLUTTERWAVE ACCOUNT VERIFY RESPONSE:", {
+      status: response.status,
+      data,
+    });
+
     if (!response.ok || data.status !== "success") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: data.message || "Unable to verify bank account.",
-        },
-        { status: 400 }
-      );
-    }
+  console.error("FLUTTERWAVE RAW ERROR:", JSON.stringify(data, null, 2));
+
+  return NextResponse.json(
+    {
+      success: false,
+      message: data.message || "Flutterwave rejected the account verification.",
+      flutterwaveResponse: data,
+    },
+    { status: 400 }
+  );
+}
 
     return NextResponse.json({
       success: true,

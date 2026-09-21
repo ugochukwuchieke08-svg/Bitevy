@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-
+import {
+  Bike,
+  Clock3,
+  X,
+  User,
+  Phone,
+  MapPin,
+  Utensils,
+  Package,
+  CheckCircle,
+} from "lucide-react";
 
 export default function RiderPage() {
 
@@ -18,7 +28,10 @@ const [loading, setLoading] = useState(true);
 const [acceptingId, setAcceptingId] = useState<string | null>(null);
 const [deliveringId, setDeliveringId] = useState<string | null>(null);
 const [activeTab, setActiveTab] = useState("orders");
-
+const [pinOrderId, setPinOrderId] = useState<string | null>(null);
+const [deliveryPin, setDeliveryPin] = useState("");
+const [totalEarnings, setTotalEarnings] = useState(0);
+const [todayEarnings, setTodayEarnings] = useState(0);
 async function loadOrders() {
 
 
@@ -102,6 +115,39 @@ const { data: myOrders } = await supabase
 setOrders(availableOrders || []);
 setMyDeliveries(myOrders || []);
 
+const { data: earningsOrders, error: earningsError } = await supabase
+  .from("orders")
+  .select("rider_amount, status, delivered_at")
+  .eq("rider_id", user.id)
+  .eq("status", "delivered");
+
+if (earningsError) {
+  console.error("Failed to load rider earnings:", earningsError);
+} else {
+  const total = (earningsOrders || []).reduce(
+    (sum, order) => sum + Number(order.rider_amount ?? 0),
+    0
+  );
+
+  const today = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Africa/Lagos",
+}).format(new Date());
+
+  const todayTotal = (earningsOrders || [])
+    .filter(
+      (order) =>
+        order.delivered_at &&
+        order.delivered_at.startsWith(today)
+    )
+    .reduce(
+      (sum, order) => sum + Number(order.rider_amount ?? 0),
+      0
+    );
+
+  setTotalEarnings(total);
+  setTodayEarnings(todayTotal);
+}
+
 setLoading(false);
 
 
@@ -160,6 +206,39 @@ async function refreshLiveOrders() {
 
   setOrders(availableOrders || []);
   setMyDeliveries(myOrders || []);
+
+
+  const { data: earningsOrders, error: earningsError } = await supabase
+  .from("orders")
+  .select("rider_amount, status, delivered_at")
+  .eq("rider_id", user.id)
+  .eq("status", "delivered");
+
+if (earningsError) {
+  console.error("Failed to refresh rider earnings:", earningsError);
+  return;
+}
+
+const total = (earningsOrders || []).reduce(
+  (sum, order) => sum + Number(order.rider_amount ?? 0),
+  0
+);
+
+const today = new Date().toISOString().split("T")[0];
+
+const todayTotal = (earningsOrders || [])
+  .filter(
+    (order) =>
+      order.delivered_at &&
+      order.delivered_at.startsWith(today)
+  )
+  .reduce(
+    (sum, order) => sum + Number(order.rider_amount ?? 0),
+    0
+  );
+
+setTotalEarnings(total);
+setTodayEarnings(todayTotal);
 }
 
 useEffect(() => {
@@ -213,7 +292,7 @@ async function acceptOrder(orderId: string) {
   }
 }
 async function markDelivered(orderId: string) {
-  if (!user) return;
+  if (!user || deliveryPin.length !== 4) return;
 
   setDeliveringId(orderId);
 
@@ -226,15 +305,19 @@ async function markDelivered(orderId: string) {
       body: JSON.stringify({
         orderId,
         riderId: user.id,
+        deliveryPin,
       }),
     });
 
     const result = await response.json();
 
     if (!response.ok) {
-      alert(result.error);
+      alert(result.error || "Unable to mark order as delivered.");
       return;
     }
+
+    setPinOrderId(null);
+    setDeliveryPin("");
 
     await loadOrders();
   } catch (error) {
@@ -255,7 +338,7 @@ if (applicationStatus === "none") {
     <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
-          <span className="text-4xl">🏍️</span>
+          <Bike className="w-10 h-10 text-orange-600" />
         </div>
 
         <h1 className="text-2xl text-black font-bold text-slate-900">
@@ -290,7 +373,7 @@ if (applicationStatus === "pending") {
     <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
       <div className="w-full text-gray-700 max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
-          <span className="text-4xl">⏳</span>
+          <Clock3 className="w-10 h-10 text-orange-600" />
         </div>
 
         <h1 className="text-2xl font-bold text-slate-900">
@@ -322,7 +405,7 @@ if (applicationStatus === "rejected") {
     <main className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-sm p-8 text-center">
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
-          <span className="text-4xl">✕</span>
+          <X className="w-10 h-10 text-red-600" />
         </div>
 
         <h1 className="text-2xl font-bold text-slate-900">
@@ -362,6 +445,31 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
     Manage deliveries and track active orders.
   </p>
 </div>
+
+<div className="grid grid-cols-2 gap-4 mb-6">
+
+  <div className="bg-white rounded-3xl p-5 shadow-sm">
+    <p className="text-sm font-semibold text-gray-500">
+      Today's Earnings
+    </p>
+
+    <p className="text-3xl font-black text-green-700 mt-2">
+      ₦{todayEarnings.toLocaleString()}
+    </p>
+  </div>
+
+  <div className="bg-white rounded-3xl p-5 shadow-sm">
+    <p className="text-sm font-semibold text-gray-500">
+      Total Earnings
+    </p>
+
+    <p className="text-3xl font-black text-black mt-2">
+      ₦{totalEarnings.toLocaleString()}
+    </p>
+  </div>
+
+</div>
+
 <div className="flex bg-white p-1 rounded-2xl mb-6">
   <button
     onClick={() => setActiveTab("deliveries")}
@@ -371,6 +479,8 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
         : "text-gray-600"
     }`}
   >
+
+
     My Deliveries ({myDeliveries.length})
   </button>
 
@@ -417,18 +527,21 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
 
           <div className="mt-4 space-y-2">
 
-            <p className="text-black">
-              👤 {order.customer_name}
-            </p>
+            <div className="flex items-center gap-3 text-black">
+  <User className="w-5 h-5 text-gray-500" />
+  <span>{order.customer_name}</span>
+</div>
 
-            <p className="text-black">
-              📞 {order.phone}
-            </p>
+          <div className="flex items-center gap-3 text-black">
+            <Phone className="w-5 h-5 text-gray-500" />
+            <span>{order.phone}</span>
+          </div>
 
-            <p className="text-black">
-              📍 {order.delivery_address}
-            </p>
-            <div className="mt-4">
+          <div className="flex items-start gap-3 text-black">
+            <MapPin className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" />
+            <span>{order.delivery_address}</span>
+          </div>
+         <div className="mt-4">
 
 
   <h3 className="font-bold text-black mb-2">
@@ -441,8 +554,9 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
 >
       <div className="bg-orange-50 rounded-2xl p-4 mb-4">
 
-        <p className="font-bold text-orange-700">
-          🍽️ {order.restaurants?.name}
+        <p className="font-bold text-orange-700   flex items-center gap-2">
+          <Utensils className="w-5 h-5" />
+          {order.restaurants?.name}
         </p>
 
       </div>
@@ -534,9 +648,10 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
           </h2>
 
           <div className="mt-4">
-  <h3 className="font-bold text-black mb-2">
-    Items
-  </h3>
+      <h3 className="font-bold text-black mb-2 flex items-center gap-2">
+        <Package className="w-5 h-5 text-gray-600" />
+        Items
+      </h3>
 
   {order.order_items?.map((item:any) => (
 
@@ -573,19 +688,75 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
             ₦{order.total.toLocaleString()}
           </p>
 
-         <button
-            onClick={() => markDelivered(order.id)}
-            disabled={deliveringId === order.id}
-            className="mt-5 bg-blue-700 text-white px-5 py-3 rounded-full font-bold disabled:opacity-50"
-          >
-            {deliveringId === order.id
-              ? "Updating..."
-              : "Mark Delivered"}
-          </button>
+        {pinOrderId === order.id ? (
+            <div className="mt-5 bg-orange-50 border border-orange-200 rounded-2xl p-4">
+              <p className="font-bold text-black">
+                Enter Customer Delivery PIN
+              </p>
+
+              <p className="text-sm text-gray-600 mt-1">
+                Ask the customer for the 4-digit PIN.
+              </p>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={deliveryPin}
+                onChange={(e) =>
+                  setDeliveryPin(e.target.value.replace(/\D/g, ""))
+                }
+                placeholder="0000"
+                className="mt-4 w-full text-center text-3xl tracking-[0.5em] font-black text-black border border-gray-300 rounded-2xl py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => {
+                    setPinOrderId(null);
+                    setDeliveryPin("");
+                  }}
+                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-2xl font-bold"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => markDelivered(order.id)}
+                  disabled={deliveryPin.length !== 4 || deliveringId === order.id}
+                  className="flex-1 bg-green-700 text-white py-3 rounded-2xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deliveringId === order.id ? (
+                    <>
+                      <Clock3 className="w-5 h-5" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      Confirm Delivery
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setPinOrderId(order.id);
+                setDeliveryPin("");
+              }}
+              className="mt-5 bg-blue-700 text-white px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-5 h-5" />
+              Mark Delivered
+            </button>
+          )}
 
         </div>
-
+      
       ))}
+
 
     </div>
    

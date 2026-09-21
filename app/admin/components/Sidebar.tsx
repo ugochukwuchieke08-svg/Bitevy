@@ -33,7 +33,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-slate-200 bg-white lg:flex lg:flex-col">
       {/* Logo */}
       <div className="border-b border-slate-100 px-8 py-7">
-        <h1 className="text-3xl font-black tracking-tight">
+        <h1 className="text-3xl text-black font-black tracking-tight">
           Bitevy
           <span className="text-orange-500">.</span>
         </h1>

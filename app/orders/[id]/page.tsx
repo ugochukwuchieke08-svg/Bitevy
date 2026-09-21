@@ -60,6 +60,22 @@ export default async function OrderDetails({
 
       </div>
 
+      {order.delivery_pin && (
+        <div className="mt-6 bg-orange-50 border border-orange-200 rounded-3xl p-6 text-center">
+          <p className="text-sm font-semibold text-orange-700">
+            DELIVERY PIN
+          </p>
+
+          <p className="mt-2 text-4xl font-black tracking-[0.4em] text-black">
+            {order.delivery_pin}
+          </p>
+
+          <p className="mt-3 text-sm text-gray-600">
+            Give this PIN to your rider when your food arrives.
+          </p>
+        </div>
+      )}
+
       <div className="mt-8 bg-white rounded-3xl shadow p-6">
 
         <h2 className="text-2xl font-bold text-black mb-5">

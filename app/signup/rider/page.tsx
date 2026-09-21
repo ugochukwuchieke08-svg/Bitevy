@@ -12,6 +12,19 @@ export default function RiderSignupPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bikeType, setBikeType] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [banks, setBanks] = useState<
+  { code: string; name: string }[]
+  >([]);
+
+  const [bankLoading, setBankLoading] = useState(false);
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const [accountVerified, setAccountVerified] = useState(false);
+
+  const [bankSearch, setBankSearch] = useState("");
 
   const [ninNumber, setNinNumber] = useState("");
 
@@ -48,6 +61,39 @@ export default function RiderSignupPage() {
     loadProfile();
   }, [user]);
 
+  useEffect(() => {
+  async function loadBanks() {
+    setBankLoading(true);
+
+    try {
+      const response = await fetch("/api/flutterwave/banks");
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to load banks.");
+      }
+
+      const uniqueBanks: { code: string; name: string }[] = Array.from(
+      new Map<string, { code: string; name: string }>(
+        (data.banks || []).map((bank: { code: string; name: string }) => [
+          bank.code,
+          bank,
+        ])
+      ).values()
+    );
+
+    setBanks(uniqueBanks);
+    } catch (error) {
+      console.error("Bank loading error:", error);
+      alert("Unable to load banks. Please try again.");
+    } finally {
+      setBankLoading(false);
+    }
+  }
+
+  loadBanks();
+}, []);
+
   async function uploadToCloudinary(file: File) {
     const formData = new FormData();
 
@@ -79,6 +125,52 @@ export default function RiderSignupPage() {
     return data.secure_url;
   }
 
+  async function verifyBankAccount() {
+  if (!bankCode || !bankName) {
+    alert("Please select your bank.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(accountNumber)) {
+    alert("Please enter a valid 10-digit account number.");
+    return;
+  }
+
+  setVerifyingAccount(true);
+
+  try {
+    const response = await fetch("/api/flutterwave/resolve-account", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        accountNumber,
+        bankCode,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      setAccountVerified(false);
+      setAccountName("");
+      alert(data.message || "Unable to verify bank account.");
+      return;
+    }
+
+    setAccountName(data.accountName);
+    setAccountVerified(true);
+  } catch (error) {
+    console.error("Account verification error:", error);
+    setAccountVerified(false);
+    setAccountName("");
+    alert("Unable to verify bank account.");
+  } finally {
+    setVerifyingAccount(false);
+  }
+}
+
   async function handleSubmit() {
     if (!user) {
       alert("Please log in to apply as a rider.");
@@ -101,9 +193,25 @@ export default function RiderSignupPage() {
       return;
     }
 
+ if (!bankCode || !bankName) {
+  alert("Please select your bank.");
+  return;
+}
+
+if (!/^\d{10}$/.test(accountNumber)) {
+  alert("Please enter a valid 10-digit account number.");
+  return;
+}
+
+if (!accountVerified || !accountName) {
+  alert("Please verify your bank account before submitting.");
+  return;
+}
+
     if (!ninNumber.trim()) {
       alert("Please enter your NIN number.");
       return;
+      
     }
 
     if (!profileImage) {
@@ -160,6 +268,10 @@ export default function RiderSignupPage() {
             full_name: fullName.trim(),
             phone: phone.trim(),
             bike_type: bikeType.trim(),
+            bank_code: bankCode.trim(),
+            bank_name: bankName.trim(),
+            account_number: accountNumber.trim(),
+            account_name: accountName.trim(),
             nin_number: ninNumber.trim(),
             nin_image: ninImageUrl,
             profile_image: profileImageUrl,
@@ -364,6 +476,143 @@ export default function RiderSignupPage() {
             />
           </div>
 
+         {/* Bank Details */}
+{/* Bank Details */}
+<div className="space-y-5">
+  {/* Bank */}
+  <div>
+    <label className="block text-sm font-bold text-gray-800 mb-2">
+      Bank
+    </label>
+
+    <input
+      type="text"
+      value={bankSearch}
+      onChange={(e) => {
+        setBankSearch(e.target.value);
+        setBankCode("");
+        setBankName("");
+        setAccountVerified(false);
+        setAccountName("");
+      }}
+      placeholder={bankLoading ? "Loading banks..." : "Search your bank"}
+      disabled={bankLoading}
+      className="w-full bg-white rounded-2xl p-4 border border-gray-200 text-black outline-none focus:border-green-700"
+    />
+
+    {bankSearch.trim() && !bankCode && (
+      <div className="mt-2 bg-white border border-gray-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+        {banks
+          .filter((bank) =>
+            bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+          )
+          .slice(0, 20)
+          .map((bank) => (
+            <button
+              key={bank.code}
+              type="button"
+              onClick={() => {
+                setBankCode(bank.code);
+                setBankName(bank.name);
+                setBankSearch(bank.name);
+                setAccountVerified(false);
+                setAccountName("");
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 text-black"
+            >
+              {bank.name}
+            </button>
+          ))}
+
+        {banks.filter((bank) =>
+          bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+        ).length === 0 && (
+          <p className="px-4 py-3 text-gray-500">
+            No bank found.
+          </p>
+        )}
+      </div>
+    )}
+
+    {bankCode && (
+      <div className="mt-2 flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
+        <span className="font-semibold text-green-800">
+          {bankName}
+        </span>
+
+        <button
+          type="button"
+          onClick={() => {
+            setBankCode("");
+            setBankName("");
+            setBankSearch("");
+            setAccountVerified(false);
+            setAccountName("");
+            setAccountNumber("");
+          }}
+          className="text-sm font-bold text-red-600"
+        >
+          Change
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Account Number */}
+  {bankCode && (
+    <div>
+      <label className="block text-sm font-bold text-gray-800 mb-2">
+        Account Number
+      </label>
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={accountNumber}
+          onChange={(e) => {
+            setAccountNumber(e.target.value.replace(/\D/g, ""));
+            setAccountVerified(false);
+            setAccountName("");
+          }}
+          placeholder="10-digit account number"
+          inputMode="numeric"
+          maxLength={10}
+          className="flex-1 bg-white rounded-2xl p-4 border border-gray-200 text-black outline-none focus:border-green-700"
+        />
+
+        <button
+          type="button"
+          onClick={verifyBankAccount}
+          disabled={
+            verifyingAccount ||
+            !bankCode ||
+            accountNumber.length !== 10
+          }
+          className="px-5 rounded-2xl bg-green-700 text-white font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          {verifyingAccount ? "Verifying..." : "Verify"}
+        </button>
+      </div>
+    </div>
+  )}
+
+  {/* Verified Account */}
+  {accountVerified && accountName && (
+    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+      <p className="text-sm font-semibold text-green-700">
+        Account verified
+      </p>
+
+      <p className="mt-1 font-bold text-green-900">
+        {accountName}
+      </p>
+
+      <p className="text-sm text-green-700 mt-1">
+        {bankName} • {accountNumber}
+      </p>
+    </div>
+  )}
+</div>
           {/* Submit */}
           <button
             onClick={handleSubmit}

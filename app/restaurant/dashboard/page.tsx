@@ -107,28 +107,28 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
   const today = new Date().toISOString().split("T")[0];
 
   const revenueToday =
-    orders
-      ?.filter(
-        (order) =>
-          order.status === "completed" &&
-          order.created_at.startsWith(today)
-      )
-      .reduce(
-        (sum, order) =>
-          sum + (order.restaurant_amount ?? 0),
-        0
-      ) ?? 0;
-
-     const totalEarnings =
   orders
     ?.filter(
-      (order) => order.payment_status === "paid"
+      (order) =>
+        order.status === "delivered" &&
+        order.created_at.startsWith(today)
     )
     .reduce(
       (sum, order) =>
         sum + Number(order.restaurant_amount ?? 0),
       0
     ) ?? 0;
+
+     const totalEarnings =
+      orders
+        ?.filter(
+          (order) => order.payment_status === "paid"
+        )
+        .reduce(
+          (sum, order) =>
+            sum + Number(order.restaurant_amount ?? 0),
+          0
+        ) ?? 0;
 
   const totalOrders = orders?.length ?? 0;
 

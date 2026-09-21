@@ -274,6 +274,9 @@ const paymentReference =
   "-" +
   Math.random().toString(36).substring(2, 8).toUpperCase();
 
+   
+const deliveryPin = Math.floor(1000 + Math.random() * 9000).toString();
+
 const { data: order, error: orderError } = await supabase
   .from("orders")
   .insert({
@@ -292,13 +295,15 @@ const { data: order, error: orderError } = await supabase
     restaurant_amount: subtotal,
     rider_amount: deliveryFee,
 
-    
+    delivery_pin: deliveryPin,
+    delivery_pin_verified: false,
 
     status: "pending",
     payment_status: "pending",
   })
   .select()
   .single();
+  
 
 if (orderError || !order) {
   console.log(orderError);
