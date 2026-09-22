@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -384,6 +385,9 @@ function SwipeableOrder({
   disabled: boolean;
   onDelete: () => Promise<boolean> | boolean;
 }) {
+
+  const router = useRouter();
+
   const [touchStart, setTouchStart] =
     useState<number | null>(null);
 
@@ -398,6 +402,7 @@ function SwipeableOrder({
     setTouchStart(
       e.touches[0].clientX
     );
+    
   }
 
   function handleTouchMove(
@@ -538,6 +543,11 @@ function SwipeableOrder({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onClick={() => {
+        if (!disabled && !deleting && swipeOffset === 0) {
+          router.push(`/orders/${order.id}`);
+        }
+      }}
       >
 
         {/* Header */}

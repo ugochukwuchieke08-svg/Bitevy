@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import OrderActions from "@/components/OrderActions";
+
 
 export default async function OrderDetails({
   params,
@@ -61,20 +61,20 @@ export default async function OrderDetails({
       </div>
 
       {order.delivery_pin && (
-        <div className="mt-6 bg-orange-50 border border-orange-200 rounded-3xl p-6 text-center">
-          <p className="text-sm font-semibold text-orange-700">
-            DELIVERY PIN
-          </p>
+  <div className="mt-6 bg-orange-50 border border-orange-200 rounded-3xl p-6 text-center">
+    <p className="text-sm font-bold text-orange-700">
+      DELIVERY PIN
+    </p>
 
-          <p className="mt-2 text-4xl font-black tracking-[0.4em] text-black">
-            {order.delivery_pin}
-          </p>
+    <p className="mt-2 text-5xl font-black tracking-[0.35em] text-black">
+      {order.delivery_pin}
+    </p>
 
-          <p className="mt-3 text-sm text-gray-600">
-            Give this PIN to your rider when your food arrives.
-          </p>
-        </div>
-      )}
+    <p className="mt-3 text-sm text-gray-600">
+      Give this PIN to your rider only when your food arrives.
+    </p>
+  </div>
+)}
 
       <div className="mt-8 bg-white rounded-3xl shadow p-6">
 
@@ -142,12 +142,6 @@ export default async function OrderDetails({
         </div>
 
       </div>
-
-      <OrderActions
-        orderId={order.id}
-        status={order.status}
-        userId={order.user_id}
-      />
 
     </main>
   );
