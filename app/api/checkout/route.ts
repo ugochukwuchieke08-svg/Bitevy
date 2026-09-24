@@ -239,7 +239,7 @@ const distanceKm = route.distanceKm;
 let deliveryFee: number;
 
 if (distanceKm <= 1) {
-  deliveryFee = 500;
+  deliveryFee = 50;
 } else if (distanceKm <= 2) {
   deliveryFee = 700;
 } else if (distanceKm <= 3) {
