@@ -1,3 +1,4 @@
+ 
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,13 +14,22 @@ export default function FlutterwaveCallbackPage() {
     const verifyPayment = async () => {
       const transactionId = searchParams.get("transaction_id");
       const txRef = searchParams.get("tx_ref");
+      const status = searchParams.get("status");
+
+      console.log("========== FLUTTERWAVE CALLBACK ==========");
+      console.log("Transaction ID:", transactionId);
+      console.log("TX REF:", txRef);
+      console.log("Status:", status);
 
       if (!transactionId || !txRef) {
+        console.error("Missing transaction information.");
         setMessage("Payment information is missing.");
         return;
       }
 
       try {
+        console.log("========== CALLING VERIFY API ==========");
+
         const response = await fetch("/api/flutterwave/verify", {
           method: "POST",
           headers: {
@@ -31,7 +41,13 @@ export default function FlutterwaveCallbackPage() {
           }),
         });
 
+        console.log("========== VERIFY API RESPONDED ==========");
+        console.log("HTTP status:", response.status);
+
         const data = await response.json();
+
+        console.log("========== VERIFY RESPONSE ==========");
+        console.log(data);
 
         if (!response.ok || !data.success) {
           console.error("Payment verification failed:", data);
@@ -43,13 +59,15 @@ export default function FlutterwaveCallbackPage() {
           return;
         }
 
+        console.log("========== PAYMENT VERIFIED ==========");
+        console.log("Order ID:", data.orderId);
+
         setMessage("Payment successful! Redirecting...");
 
-        setTimeout(() => {
-          router.replace(`/order-success?orderId=${data.orderId}`);
-        }, 1000);
+        router.replace(`/order-success?orderId=${data.orderId}`);
       } catch (error) {
-        console.error("Verification request failed:", error);
+        console.error("========== VERIFY REQUEST FAILED ==========");
+        console.error(error);
 
         setMessage(
           "Something went wrong while verifying your payment."
@@ -76,3 +94,4 @@ export default function FlutterwaveCallbackPage() {
     </main>
   );
 }
+
