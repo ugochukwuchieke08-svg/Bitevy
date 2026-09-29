@@ -22,18 +22,31 @@ export async function POST(req: NextRequest) {
 
     // Check admin permission
     // This assumes admin users are identified by profiles.role = "admin"
-    const { data: adminProfile, error: adminError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const { data: adminProfile, error: adminError } = await supabaseAdmin
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
 
-    if (adminError || adminProfile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized." },
-        { status: 403 }
-      );
-    }
+if (adminError || adminProfile?.role !== "admin") {
+  console.error("ADMIN CHECK FAILED:", {
+    userId: user.id,
+    adminError,
+    adminProfile,
+  });
+
+  return NextResponse.json(
+    {
+      error: "Admin check failed.",
+      debug: {
+        hasProfile: !!adminProfile,
+        role: adminProfile?.role ?? null,
+        hasAdminError: !!adminError,
+      },
+    },
+    { status: 403 }
+  );
+}
 
     const { applicationId, decision } = await req.json();
 
