@@ -20,105 +20,98 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import PremiumOfferBanner from "@/components/PremiumOfferBanner";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
-import FavoriteButton from "@/components/FavoriteButton";
 import RestaurantCard from "@/components/RestaurantCard";
-import {
-  faFire,
-  faArrowRight,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  faStar,
-  faClock,
-  faMotorcycle,
-  
-} from "@fortawesome/free-solid-svg-icons";
+
 
 export default async function Home() {
+  const supabase = await createServerSupabaseClient();
 
-const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-const {
-  data: { user },
-} = await supabase.auth.getUser();
+  // Run all data requests that do not depend on the user at the same time.
+  const [
+    { data: categories },
+    { data: restaurants, error: restaurantsError },
+    { data: foods },
+  ] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("*")
+      .order("position", { ascending: true }),
 
-console.log("USER:", user);
+    supabase
+      .from("restaurants")
+      .select("*"),
 
-const { data: categories } = await supabase
-  .from("categories")
-  .select("*")
-  .order("position", { ascending: true });
+    supabase
+      .from("menu_items")
+      .select(`
+        id,
+        name,
+        price,
+        image,
+        restaurants (
+          name
+        )
+      `)
+      .limit(20),
+  ]);
 
+  // User-specific data also runs in parallel.
+  let profile = null;
+  let deliveryAddress = null;
+  let orderCount = 0;
+  let favoriteCount = 0;
 
-const { data: restaurants, error } = await supabase
-  .from("restaurants")
-  .select("*");
+  if (user) {
+    const [
+      { data: profileData },
+      { data: addressData },
+      { count: favorites },
+      { count: orders },
+    ] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, role, email, phone, address")
+        .eq("id", user.id)
+        .single(),
 
+      supabase
+        .from("addresses")
+        .select("address")
+        .eq("user_id", user.id)
+        .maybeSingle(),
 
-console.log("User ID:", user?.id);
-let profile = null;
+      supabase
+        .from("restaurant_favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id),
 
-if (user) {
- const { data } = await supabase
-  .from("profiles")
-  .select("full_name, role, email, phone, address")
-  .eq("id", user.id)
-  .single();
+      supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id),
+    ]);
 
-console.log("PROFILE:", data);
+    profile = profileData;
+    deliveryAddress = addressData?.address ?? null;
+    favoriteCount = favorites ?? 0;
+    orderCount = orders ?? 0;
+  }
 
-profile = data;
-}  
+  const firstRow =
+    restaurants?.filter((_, index) => index % 2 === 0) ?? [];
 
-let deliveryAddress = null;
+  const secondRow =
+    restaurants?.filter((_, index) => index % 2 !== 0) ?? [];
 
-if (user) {
-const { data } = await supabase
-  .from("addresses")
-  .select("address")
-  .eq("user_id", user.id)
-  .maybeSingle();
-
-deliveryAddress = data?.address ?? null;
-}
-
-// Sidebar stats (desktop profile card) — mirrors the counts used on /account
-let orderCount = 0;
-let favoriteCount = 0;
-
-if (user) {
-  const { count: favorites } = await supabase
-    .from("restaurant_favorites")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
-
-  const { count: orders } = await supabase
-    .from("orders")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
-
-  favoriteCount = favorites ?? 0;
-  orderCount = orders ?? 0;
-}
-
-   
-const { data: foods } = await supabase
-  .from("menu_items")
-  .select(`
-    *,
-    restaurants (
-      name
-    )
-  `)
-  .limit(20);
-
-const firstRow = restaurants?.filter((_, index) => index % 2 === 0) ?? [];
-const secondRow = restaurants?.filter((_, index) => index % 2 !== 0) ?? [];
-
-console.log("Foods:", foods);
-console.log("Error:", error);
-   console.log("Foods:", foods);
-console.log("Error:", error);
+  console.log("Home data loaded", {
+    restaurantsError,
+    restaurantCount: restaurants?.length ?? 0,
+    foodCount: foods?.length ?? 0,
+  });
   return (
    <RedirectIfNotLoggedIn>
    <main className="min-h-screen bg-[#fff8f0] pb-24 md:flex md:h-screen md:flex-col md:overflow-hidden md:pb-0">

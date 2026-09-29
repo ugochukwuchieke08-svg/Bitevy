@@ -100,46 +100,41 @@ if (decision === "approve") {
     );
   }
 
-  const flutterwaveResponse = await fetch(
-    "https://api.flutterwave.com/v3/beneficiaries",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        account_bank: application.bank_code,
-        account_number: application.account_number,
-        beneficiary_name: application.account_name,
-        currency: "NGN",
-        bank_name: application.bank_name,
-      }),
-    }
-  );
-
-  const flutterwaveData = await flutterwaveResponse.json();
-
-  console.log("FLUTTERWAVE BENEFICIARY RESPONSE:", {
-    status: flutterwaveResponse.status,
-    data: flutterwaveData,
-  });
-
-  if (
-    !flutterwaveResponse.ok ||
-    flutterwaveData.status !== "success"
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          flutterwaveData.message ||
-          "Failed to create Flutterwave payout beneficiary.",
-      },
-      { status: 400 }
-    );
+  const payoutResponse = await fetch(
+  "https://payout.bitevy.app/create-recipient",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-bitevy-secret": process.env.BITEVY_PAYOUT_SECRET!,
+    },
+    body: JSON.stringify({
+      applicationId: application.id,
+      bankCode: application.bank_code,
+      accountNumber: application.account_number,
+    }),
   }
+);
 
-  flutterwaveBeneficiaryId = String(flutterwaveData.data.id);
+const payoutData = await payoutResponse.json();
+
+console.log("BITEVY PAYOUT RECIPIENT RESPONSE:", {
+  status: payoutResponse.status,
+  data: payoutData,
+});
+
+if (!payoutResponse.ok || !payoutData.ok) {
+  return NextResponse.json(
+    {
+      error:
+        payoutData.error ||
+        "Failed to create Flutterwave payout recipient.",
+    },
+    { status: 400 }
+  );
+}
+
+flutterwaveBeneficiaryId = String(payoutData.recipientId);
 }
 
     const newStatus =

@@ -74,21 +74,7 @@ export default function AccountPage() {
 
   // CONDITIONAL RETURNS COME AFTER ALL HOOKS
 
-  if (authLoading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        Loading...
-      </main>
-    );
-  }
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        Loading...
-      </main>
-    );
-  }
+  
 
   if (!user) {
     return (
