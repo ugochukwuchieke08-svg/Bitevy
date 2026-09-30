@@ -32,6 +32,7 @@ const [pinOrderId, setPinOrderId] = useState<string | null>(null);
 const [deliveryPin, setDeliveryPin] = useState("");
 const [totalEarnings, setTotalEarnings] = useState(0);
 const [todayEarnings, setTodayEarnings] = useState(0);
+const [processingPayout, setProcessingPayout] = useState(0);
 async function loadOrders() {
 
 
@@ -115,37 +116,55 @@ const { data: myOrders } = await supabase
 setOrders(availableOrders || []);
 setMyDeliveries(myOrders || []);
 
-const { data: earningsOrders, error: earningsError } = await supabase
-  .from("orders")
-  .select("rider_amount, status, delivered_at")
-  .eq("rider_id", user.id)
-  .eq("status", "delivered");
+const { data: payoutRecords, error: payoutError } = await supabase
+  .from("rider_payouts")
+  .select("amount, status, created_at, updated_at")
+  .eq("rider_id", user.id);
 
-if (earningsError) {
-  console.error("Failed to load rider earnings:", earningsError);
+if (payoutError) {
+  console.error("Failed to load rider payouts:", payoutError);
 } else {
-  const total = (earningsOrders || []).reduce(
-    (sum, order) => sum + Number(order.rider_amount ?? 0),
+  // Only completed payouts count as earnings.
+  const successfulPayouts = (payoutRecords || []).filter(
+    (payout) => payout.status === "successful"
+  );
+
+  const total = successfulPayouts.reduce(
+    (sum, payout) => sum + Number(payout.amount ?? 0),
     0
   );
 
   const today = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Africa/Lagos",
-}).format(new Date());
+    timeZone: "Africa/Lagos",
+  }).format(new Date());
 
-  const todayTotal = (earningsOrders || [])
-    .filter(
-      (order) =>
-        order.delivered_at &&
-        order.delivered_at.startsWith(today)
+  const todayTotal = successfulPayouts
+    .filter((payout) => {
+      if (!payout.updated_at) return false;
+
+      const payoutDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Lagos",
+      }).format(new Date(payout.updated_at));
+
+      return payoutDate === today;
+    })
+    .reduce(
+      (sum, payout) => sum + Number(payout.amount ?? 0),
+      0
+    );
+
+  const processingTotal = (payoutRecords || [])
+    .filter((payout) =>
+      ["processing", "pending"].includes(payout.status)
     )
     .reduce(
-      (sum, order) => sum + Number(order.rider_amount ?? 0),
+      (sum, payout) => sum + Number(payout.amount ?? 0),
       0
     );
 
   setTotalEarnings(total);
   setTodayEarnings(todayTotal);
+  setProcessingPayout(processingTotal);
 }
 
 setLoading(false);
@@ -206,44 +225,63 @@ async function refreshLiveOrders() {
 
   setOrders(availableOrders || []);
   setMyDeliveries(myOrders || []);
+ 
 
+const { data: payoutRecords, error: payoutError } = await supabase
+  .from("rider_payouts")
+  .select("amount, status, created_at, updated_at")
+  .eq("rider_id", user.id);
 
-  const { data: earningsOrders, error: earningsError } = await supabase
-  .from("orders")
-  .select("rider_amount, status, delivered_at")
-  .eq("rider_id", user.id)
-  .eq("status", "delivered");
-
-if (earningsError) {
-  console.error("Failed to refresh rider earnings:", earningsError);
+if (payoutError) {
+  console.error("Failed to refresh rider payouts:", payoutError);
   return;
 }
 
-const total = (earningsOrders || []).reduce(
-  (sum, order) => sum + Number(order.rider_amount ?? 0),
+const successfulPayouts = (payoutRecords || []).filter(
+  (payout) => payout.status === "successful"
+);
+
+const total = successfulPayouts.reduce(
+  (sum, payout) => sum + Number(payout.amount ?? 0),
   0
 );
 
-const today = new Date().toISOString().split("T")[0];
+const today = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Africa/Lagos",
+}).format(new Date());
 
-const todayTotal = (earningsOrders || [])
-  .filter(
-    (order) =>
-      order.delivered_at &&
-      order.delivered_at.startsWith(today)
+const todayTotal = successfulPayouts
+  .filter((payout) => {
+    if (!payout.updated_at) return false;
+
+    const payoutDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Lagos",
+    }).format(new Date(payout.updated_at));
+
+    return payoutDate === today;
+  })
+  .reduce(
+    (sum, payout) => sum + Number(payout.amount ?? 0),
+    0
+  );
+
+const processingTotal = (payoutRecords || [])
+  .filter((payout) =>
+    ["processing", "pending"].includes(payout.status)
   )
   .reduce(
-    (sum, order) => sum + Number(order.rider_amount ?? 0),
+    (sum, payout) => sum + Number(payout.amount ?? 0),
     0
   );
 
 setTotalEarnings(total);
 setTodayEarnings(todayTotal);
+setProcessingPayout(processingTotal);
 }
 
 useEffect(() => {
   loadOrders();
-}, []);
+}, []); 
 
 useEffect(() => {
   if (!user || applicationStatus !== "active") return;
@@ -477,6 +515,20 @@ return ( <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white
       ₦{totalEarnings.toLocaleString()}
     </p>
   </div>
+
+  <div className="bg-white rounded-3xl p-5 shadow-sm mb-6">
+  <p className="text-sm font-semibold text-gray-500">
+    Processing Payout
+  </p>
+
+  <p className="text-3xl font-black text-orange-600 mt-2">
+    ₦{processingPayout.toLocaleString()}
+  </p>
+
+  <p className="text-sm text-gray-500 mt-1">
+    Being processed by Flutterwave
+  </p>
+</div>
 
 </div>
 
