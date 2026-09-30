@@ -7,11 +7,53 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const authSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 const PAYOUT_SERVER_URL = "https://payout.bitevy.app/create-transfer";
 
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, riderId, deliveryPin } = await req.json();
+   const { orderId, riderId, deliveryPin } = await req.json();
+
+    if (!orderId || !riderId || !deliveryPin) {
+      return NextResponse.json(
+        { error: "Missing orderId, riderId, or delivery PIN." },
+        { status: 400 }
+      );
+    }
+
+    const authHeader = req.headers.get("authorization");
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 401 }
+      );
+    }
+
+    if (String(user.id) !== String(riderId)) {
+      return NextResponse.json(
+        { error: "Unauthorized rider." },
+        { status: 403 }
+      );
+    }
 
     if (!orderId || !riderId || !deliveryPin) {
       return NextResponse.json(
@@ -149,10 +191,12 @@ export async function POST(req: NextRequest) {
     let payoutErrorMessage: string | null = null;
 
     try {
-      const amount = Number(order.rider_amount);
+     const amount = Number(order.rider_amount);
 
-      if (!Number.isFinite(amount) || amount <= 0) {
-        throw new Error("Invalid rider payout amount.");
+      if (!Number.isFinite(amount) || amount < 100) {
+        throw new Error(
+          "Rider payout must be at least ₦100."
+        );
       }
 
       // ----------------------------------------------------------
@@ -203,7 +247,7 @@ export async function POST(req: NextRequest) {
       // This prevents duplicate transfers if the delivery endpoint
       // is called again.
 
-      const reference = `BTV-RIDER-${order.id}`;
+      const reference = `BTV-R-${order.id}`;
 
       // ----------------------------------------------------------
       // EXISTING PAYOUT

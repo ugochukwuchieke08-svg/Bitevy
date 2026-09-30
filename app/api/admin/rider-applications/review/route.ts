@@ -148,6 +148,20 @@ if (!payoutResponse.ok || !payoutData.ok) {
 }
 
 flutterwaveBeneficiaryId = String(payoutData.recipientId);
+
+if (!flutterwaveBeneficiaryId.startsWith("rcb_")) {
+  console.error(
+    "INVALID FLUTTERWAVE V4 RECIPIENT ID:",
+    flutterwaveBeneficiaryId
+  );
+
+  return NextResponse.json(
+    {
+      error: "Invalid Flutterwave V4 recipient ID.",
+    },
+    { status: 500 }
+  );
+}
 }
 
     const newStatus =
