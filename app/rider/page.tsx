@@ -297,11 +297,21 @@ async function markDelivered(orderId: string) {
   setDeliveringId(orderId);
 
   try {
-    const response = await fetch("/api/rider/deliver", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+if (!session?.access_token) {
+  alert("Your session has expired. Please log in again.");
+  return;
+}
+
+const response = await fetch("/api/rider/deliver", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${session.access_token}`,
+  },
       body: JSON.stringify({
         orderId,
         riderId: user.id,
