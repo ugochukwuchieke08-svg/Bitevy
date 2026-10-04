@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import RestaurantOpenToggle from "@/components/RestaurantOpenToggle";
@@ -30,6 +29,7 @@ export default async function RestaurantDashboard() {
           <h1 className="text-2xl font-black text-black">
             Please login.
           </h1>
+
           <p className="text-gray-500 mt-2">
             You need to be logged in to access your restaurant dashboard.
           </p>
@@ -41,17 +41,17 @@ export default async function RestaurantDashboard() {
   console.log("Dashboard user:", user.id);
   console.log("Dashboard error:", error);
 
-const {
-  data: restaurant,
-  error: restaurantError,
-} = await supabase
-  .from("restaurants")
-  .select("*")
-  .eq("owner_id", user.id)
-  .single();
+  const {
+    data: restaurant,
+    error: restaurantError,
+  } = await supabase
+    .from("restaurants")
+    .select("*")
+    .eq("owner_id", user.id)
+    .single();
 
-console.log("RESTAURANT FROM DATABASE:", restaurant);
-console.log("RESTAURANT QUERY ERROR:", restaurantError);
+  console.log("RESTAURANT FROM DATABASE:", restaurant);
+  console.log("RESTAURANT QUERY ERROR:", restaurantError);
 
   if (!restaurant) {
     return (
@@ -85,9 +85,9 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
   }
 
   const { data: orders } = await supabase
-  .from("orders")
-  .select("status, created_at, restaurant_amount, payment_status")
-  .eq("restaurant_id", restaurant.id);
+    .from("orders")
+    .select("status, created_at, restaurant_amount, payment_status")
+    .eq("restaurant_id", restaurant.id);
 
   const pendingOrders =
     orders?.filter(
@@ -107,28 +107,51 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
   const today = new Date().toISOString().split("T")[0];
 
   const revenueToday =
-  orders
-    ?.filter(
-      (order) =>
-        order.status === "delivered" &&
-        order.created_at.startsWith(today)
-    )
-    .reduce(
-      (sum, order) =>
-        sum + Number(order.restaurant_amount ?? 0),
-      0
-    ) ?? 0;
+    orders
+      ?.filter(
+        (order) =>
+          order.status === "delivered" &&
+          order.created_at.startsWith(today)
+      )
+      .reduce(
+        (sum, order) =>
+          sum + Number(order.restaurant_amount ?? 0),
+        0
+      ) ?? 0;
 
-     const totalEarnings =
-      orders
-        ?.filter(
-          (order) => order.payment_status === "paid"
-        )
-        .reduce(
-          (sum, order) =>
-            sum + Number(order.restaurant_amount ?? 0),
-          0
-        ) ?? 0;
+  /*
+   * Total restaurant earnings from paid orders.
+   */
+  const totalEarnings =
+    orders
+      ?.filter(
+        (order) => order.payment_status === "paid"
+      )
+      .reduce(
+        (sum, order) =>
+          sum + Number(order.restaurant_amount ?? 0),
+        0
+      ) ?? 0;
+
+  /*
+   * Current pending payout.
+   *
+   * Restaurant payouts are handled through the payment provider's
+   * settlement system. The current database schema does not contain
+   * a separate restaurant payout/settlement status, so paid
+   * restaurant earnings are treated as the current pending payout
+   * amount shown on the dashboard.
+   */
+  const pendingPayout =
+    orders
+      ?.filter(
+        (order) => order.payment_status === "paid"
+      )
+      .reduce(
+        (sum, order) =>
+          sum + Number(order.restaurant_amount ?? 0),
+        0
+      ) ?? 0;
 
   const totalOrders = orders?.length ?? 0;
 
@@ -146,8 +169,6 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
             <div className="w-9 h-9 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition">
               <ArrowLeft className="w-5 h-5" />
             </div>
-
-           
           </Link>
 
           <h1 className="text-lg sm:text-xl font-black">
@@ -171,7 +192,7 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
             className="absolute inset-0 w-full h-full object-cover opacity-45"
           />
 
-        <div className="absolute inset-0 bg-black/25" />
+          <div className="absolute inset-0 bg-black/25" />
 
           <div className="relative min-h-[300px] sm:min-h-[340px] p-6 sm:p-9 flex flex-col justify-end">
 
@@ -277,6 +298,41 @@ console.log("RESTAURANT QUERY ERROR:", restaurantError);
               iconClass="bg-green-50 text-green-600"
               valueClass="text-green-600"
             />
+
+          </div>
+
+          {/* PENDING PAYOUT */}
+          <div className="mt-4 bg-white rounded-3xl p-5 border border-black/5 shadow-sm">
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div>
+
+                <div className="flex items-center gap-2">
+
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                    <Wallet className="w-5 h-5" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-gray-500">
+                      Pending Payout
+                    </p>
+
+                    <p className="text-2xl sm:text-3xl font-black text-orange-600 mt-1">
+                      ₦{pendingPayout.toLocaleString()}
+                    </p>
+                  </div>
+
+                </div>
+
+                <p className="text-sm text-gray-500 mt-4">
+                  Pending — usually takes up to 24 hrs
+                </p>
+
+              </div>
+
+            </div>
 
           </div>
 

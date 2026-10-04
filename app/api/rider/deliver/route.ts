@@ -12,11 +12,13 @@ const authSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const PAYOUT_SERVER_URL = "https://payout.bitevy.app/create-transfer";
-
 export async function POST(req: NextRequest) {
   try {
-   const { orderId, riderId, deliveryPin } = await req.json();
+    const { orderId, riderId, deliveryPin } = await req.json();
+
+    // ============================================================
+    // INPUT VALIDATION
+    // ============================================================
 
     if (!orderId || !riderId || !deliveryPin) {
       return NextResponse.json(
@@ -24,6 +26,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // ============================================================
+    // AUTHENTICATE RIDER
+    // ============================================================
 
     const authHeader = req.headers.get("authorization");
 
@@ -52,13 +58,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Unauthorized rider." },
         { status: 403 }
-      );
-    }
-
-    if (!orderId || !riderId || !deliveryPin) {
-      return NextResponse.json(
-        { error: "Missing orderId, riderId, or delivery PIN." },
-        { status: 400 }
       );
     }
 
@@ -114,38 +113,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "This order has not been successfully paid for. Rider payout cannot be processed.",
+            "This order has not been successfully paid for. Delivery cannot be completed.",
         },
         { status: 400 }
-      );
-    }
-
-    // ============================================================
-    // GET EXISTING PAYOUT
-    // ============================================================
-
-    const { data: existingPayout, error: existingPayoutError } =
-      await supabase
-        .from("rider_payouts")
-        .select(`
-          id,
-          status,
-          flutterwave_reference,
-          flutterwave_transfer_id,
-          failure_reason
-        `)
-        .eq("order_id", order.id)
-        .maybeSingle();
-
-    if (existingPayoutError) {
-      console.error(
-        "Existing payout lookup failed:",
-        existingPayoutError
-      );
-
-      return NextResponse.json(
-        { error: "Failed to check rider payout." },
-        { status: 500 }
       );
     }
 
@@ -172,8 +142,6 @@ export async function POST(req: NextRequest) {
     // DELIVERY PIN
     // ============================================================
 
-    // A delivery that was already verified can only reach this
-    // route again for a payout retry.
     if (!alreadyDelivered) {
       if (String(order.delivery_pin) !== String(deliveryPin)) {
         return NextResponse.json(
@@ -184,387 +152,98 @@ export async function POST(req: NextRequest) {
     }
 
     // ============================================================
-    // RIDER PAYOUT
+    // RIDER PAYOUT AMOUNT
     // ============================================================
 
-    let payoutStatus = "failed";
-    let payoutErrorMessage: string | null = null;
+    const amount = Number(order.rider_amount);
 
-    try {
-     const amount = Number(order.rider_amount);
+    if (!Number.isFinite(amount) || amount < 100) {
+      console.error("Invalid rider payout amount:", {
+        orderId: order.id,
+        riderAmount: order.rider_amount,
+      });
 
-      if (!Number.isFinite(amount) || amount < 100) {
-        throw new Error(
-          "Rider payout must be at least ₦100."
-        );
-      }
-
-      // ----------------------------------------------------------
-      // GET RIDER PAYOUT BENEFICIARY
-      // ----------------------------------------------------------
-
-      const { data: riderApplication, error: riderError } =
-        await supabase
-          .from("rider_applications")
-          .select(`
-            user_id,
-            status,
-            flutterwave_beneficiary_id
-          `)
-          .eq("user_id", order.rider_id)
-          .eq("status", "active")
-          .maybeSingle();
-
-      if (riderError) {
-        console.error(
-          "Rider payout details lookup failed:",
-          riderError
-        );
-
-        throw new Error(
-          "Failed to find rider payout details."
-        );
-      }
-
-      if (!riderApplication) {
-        throw new Error(
-          "Active rider application not found."
-        );
-      }
-
-      if (!riderApplication.flutterwave_beneficiary_id) {
-        throw new Error(
-          "This rider does not have a Flutterwave payout beneficiary."
-        );
-      }
-
-      // ----------------------------------------------------------
-      // PAYOUT REFERENCE
-      // ----------------------------------------------------------
-      // IMPORTANT:
-      // Stable per order. Never use Date.now() here.
-      //
-      // This prevents duplicate transfers if the delivery endpoint
-      // is called again.
-
-      const reference = `BTV-R-${order.id}`;
-
-      // ----------------------------------------------------------
-      // EXISTING PAYOUT
-      // ----------------------------------------------------------
-
-      if (existingPayout) {
-        // Already submitted to Flutterwave.
-        // DO NOT create another transfer.
-        if (
-          ["processing", "pending", "successful"].includes(
-            existingPayout.status
-          )
-        ) {
-          payoutStatus = existingPayout.status;
-          payoutErrorMessage = null;
-        } else if (existingPayout.status === "failed") {
-          // A failed payout can be retried using the SAME
-          // reference. The payout server's idempotency key
-          // protects against duplicate creation.
-          const payoutSecret =
-            process.env.BITEVY_PAYOUT_SECRET;
-
-          if (!payoutSecret) {
-            throw new Error(
-              "Payout server configuration error."
-            );
-          }
-
-          const payoutResponse = await fetch(
-            PAYOUT_SERVER_URL,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-bitevy-secret": payoutSecret,
-              },
-              body: JSON.stringify({
-                recipientId:
-                  riderApplication.flutterwave_beneficiary_id,
-                amount,
-                reference,
-                narration:
-                  `Bitevy rider payout for order ${order.id}`,
-              }),
-            }
-          );
-
-          const payoutData =
-            await payoutResponse.json();
-
-          console.log(
-            "BITEVY PAYOUT RETRY RESPONSE:",
-            {
-              status: payoutResponse.status,
-              data: payoutData,
-            }
-          );
-
-          if (
-            !payoutResponse.ok ||
-            !payoutData.ok ||
-            !payoutData.transfer
-          ) {
-            const failureReason =
-              payoutData.error ||
-              "Flutterwave transfer failed.";
-
-            await supabase
-              .from("rider_payouts")
-              .update({
-                status: "failed",
-                failure_reason: failureReason,
-                updated_at:
-                  new Date().toISOString(),
-              })
-              .eq("id", existingPayout.id);
-
-            throw new Error(failureReason);
-          }
-
-          const transfer =
-            payoutData.transfer;
-
-          const transferId = transfer.id
-            ? String(transfer.id)
-            : existingPayout.flutterwave_transfer_id;
-
-          const transferStatus =
-            String(transfer.status || "").toUpperCase();
-
-          let databaseStatus = "processing";
-
-          if (transferStatus === "SUCCESSFUL") {
-            databaseStatus = "successful";
-          } else if (transferStatus === "FAILED") {
-            databaseStatus = "failed";
-          } else if (
-            ["NEW", "PENDING", "PROCESSING"].includes(
-              transferStatus
-            )
-          ) {
-            databaseStatus = "processing";
-          }
-
-          await supabase
-            .from("rider_payouts")
-            .update({
-              flutterwave_transfer_id:
-                transferId,
-              flutterwave_reference:
-                reference,
-              status: databaseStatus,
-              failure_reason:
-                databaseStatus === "failed"
-                  ? "Flutterwave transfer failed."
-                  : null,
-              updated_at:
-                new Date().toISOString(),
-            })
-            .eq("id", existingPayout.id);
-
-          payoutStatus = databaseStatus;
-
-          if (databaseStatus === "failed") {
-            throw new Error(
-              "Flutterwave transfer failed."
-            );
-          }
-        }
-      } else {
-        // --------------------------------------------------------
-        // CREATE NEW PAYOUT RECORD
-        // --------------------------------------------------------
-
-        const { data: payout, error: payoutInsertError } =
-          await supabase
-            .from("rider_payouts")
-            .insert({
-              rider_id: order.rider_id,
-              order_id: order.id,
-              amount,
-              currency: "NGN",
-              flutterwave_reference: reference,
-              status: "processing",
-            })
-            .select()
-            .single();
-
-        if (payoutInsertError || !payout) {
-          console.error(
-            "Payout insert failed:",
-            payoutInsertError
-          );
-
-          throw new Error(
-            "Could not create rider payout record."
-          );
-        }
-
-        // --------------------------------------------------------
-        // SEND PAYOUT TO DEDICATED PAYOUT SERVER
-        // --------------------------------------------------------
-
-        const payoutSecret =
-          process.env.BITEVY_PAYOUT_SECRET;
-
-        if (!payoutSecret) {
-          throw new Error(
-            "Payout server configuration error."
-          );
-        }
-
-        const payoutResponse = await fetch(
-          PAYOUT_SERVER_URL,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-bitevy-secret": payoutSecret,
-            },
-            body: JSON.stringify({
-              recipientId:
-                riderApplication.flutterwave_beneficiary_id,
-              amount,
-              reference,
-              narration:
-                `Bitevy rider payout for order ${order.id}`,
-            }),
-          }
-        );
-
-        const payoutData =
-          await payoutResponse.json();
-
-        console.log(
-          "BITEVY RIDER PAYOUT RESPONSE:",
-          {
-            status: payoutResponse.status,
-            data: payoutData,
-          }
-        );
-
-        if (
-          !payoutResponse.ok ||
-          !payoutData.ok ||
-          !payoutData.transfer
-        ) {
-          const failureReason =
-            payoutData.error ||
-            "Flutterwave transfer failed.";
-
-          await supabase
-            .from("rider_payouts")
-            .update({
-              status: "failed",
-              failure_reason: failureReason,
-              updated_at:
-                new Date().toISOString(),
-            })
-            .eq("id", payout.id);
-
-          throw new Error(failureReason);
-        }
-
-        // --------------------------------------------------------
-        // SAVE FLUTTERWAVE TRANSFER
-        // --------------------------------------------------------
-
-        const transfer =
-          payoutData.transfer;
-
-        const transferId = transfer.id
-          ? String(transfer.id)
-          : null;
-
-        const transferStatus =
-          String(transfer.status || "").toUpperCase();
-
-        let databaseStatus = "processing";
-
-        if (transferStatus === "SUCCESSFUL") {
-          databaseStatus = "successful";
-        } else if (transferStatus === "FAILED") {
-          databaseStatus = "failed";
-        } else if (
-          ["NEW", "PENDING", "PROCESSING"].includes(
-            transferStatus
-          )
-        ) {
-          databaseStatus = "processing";
-        }
-
-        await supabase
-          .from("rider_payouts")
-          .update({
-            flutterwave_transfer_id:
-              transferId,
-            status: databaseStatus,
-            failure_reason:
-              databaseStatus === "failed"
-                ? "Flutterwave transfer failed."
-                : null,
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq("id", payout.id);
-
-        payoutStatus = databaseStatus;
-
-        if (databaseStatus === "failed") {
-          throw new Error(
-            "Flutterwave transfer failed."
-          );
-        }
-      }
-    } catch (payoutError) {
-      console.error(
-        "RIDER PAYOUT ERROR:",
-        payoutError
+      return NextResponse.json(
+        {
+          error:
+            "This order cannot be completed because the rider payout amount is invalid.",
+        },
+        { status: 400 }
       );
-
-      payoutErrorMessage =
-        payoutError instanceof Error
-          ? payoutError.message
-          : "Rider payout failed.";
-
-      payoutStatus = "failed";
     }
 
     // ============================================================
-    // MARK ORDER AS DELIVERED
+    // SHORT FLUTTERWAVE REFERENCE
     // ============================================================
     //
-    // Delivery itself should not depend on payout success.
-    // The rider has physically completed the delivery.
+    // Flutterwave references must stay within their length limit.
     //
-    // If payout fails, the order remains delivered and the
-    // endpoint can safely be called again to retry ONLY the payout.
+    // Example:
+    // BTV-R-398e968f-R1
+    //
+    // ============================================================
+
+    const reference = `BTV-R-${String(order.id).slice(0, 8)}-R1`;
+
+    // ============================================================
+    // CHECK EXISTING PAYOUT
+    // ============================================================
+
+    const {
+      data: existingPayout,
+      error: existingPayoutError,
+    } = await supabase
+      .from("rider_payouts")
+      .select(`
+        id,
+        status,
+        flutterwave_reference,
+        flutterwave_transfer_id,
+        failure_reason,
+        next_attempt_at
+      `)
+      .eq("order_id", order.id)
+      .maybeSingle();
+
+    if (existingPayoutError) {
+      console.error(
+        "Existing payout lookup failed:",
+        existingPayoutError
+      );
+
+      return NextResponse.json(
+        {
+          error: "Failed to check rider payout status.",
+        },
+        { status: 500 }
+      );
+    }
+
+    // ============================================================
+    // MARK ORDER AS DELIVERED FIRST
+    // ============================================================
+    //
+    // Delivery must never depend on Flutterwave payout.
+    //
+    // ============================================================
 
     if (!alreadyDelivered) {
-      const { data: updatedOrder, error: updateError } =
-        await supabase
-          .from("orders")
-          .update({
-            status: "delivered",
-            delivery_pin_verified: true,
-            delivered_at:
-              new Date().toISOString(),
-          })
-          .eq("id", order.id)
-          .eq("rider_id", riderId)
-          .eq("status", "out_for_delivery")
-          .eq("delivery_pin_verified", false)
-          .select(
-            "id, status, delivered_at"
-          )
-          .single();
+      const {
+        data: updatedOrder,
+        error: updateError,
+      } = await supabase
+        .from("orders")
+        .update({
+          status: "delivered",
+          delivery_pin_verified: true,
+          delivered_at: new Date().toISOString(),
+        })
+        .eq("id", order.id)
+        .eq("rider_id", riderId)
+        .eq("status", "out_for_delivery")
+        .eq("delivery_pin_verified", false)
+        .select("id, status, delivered_at")
+        .single();
 
       if (updateError || !updatedOrder) {
         console.error(
@@ -583,73 +262,256 @@ export async function POST(req: NextRequest) {
     }
 
     // ============================================================
+    // CREATE / UPDATE RIDER PAYOUT QUEUE
+    // ============================================================
+    //
+    // IMPORTANT:
+    //
+    // This route DOES NOT transfer money.
+    //
+    // It only creates/queues the payout.
+    //
+    // The DigitalOcean worker handles Flutterwave transfers.
+    //
+    // ============================================================
+
+    let payoutStatus = "pending";
+    let payoutErrorMessage: string | null = null;
+
+    // ============================================================
+    // EXISTING PAYOUT
+    // ============================================================
+
+    if (existingPayout) {
+      // ----------------------------------------------------------
+      // ALREADY PAID
+      // ----------------------------------------------------------
+
+      if (existingPayout.status === "paid") {
+        payoutStatus = "paid";
+        payoutErrorMessage = null;
+      }
+
+      // ----------------------------------------------------------
+      // PROCESSING
+      // ----------------------------------------------------------
+
+      else if (existingPayout.status === "processing") {
+        payoutStatus = "processing";
+        payoutErrorMessage = null;
+      }
+
+      // ----------------------------------------------------------
+      // PENDING
+      // ----------------------------------------------------------
+
+      else if (existingPayout.status === "pending") {
+        payoutStatus = "pending";
+        payoutErrorMessage = existingPayout.failure_reason;
+
+        const { error: queueError } = await supabase
+          .from("rider_payouts")
+          .update({
+            next_attempt_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingPayout.id);
+
+        if (queueError) {
+          console.error(
+            "Failed to refresh payout queue:",
+            queueError
+          );
+        }
+      }
+
+      // ----------------------------------------------------------
+      // FAILED
+      // ----------------------------------------------------------
+
+      else if (existingPayout.status === "failed") {
+        const { error: retryError } = await supabase
+          .from("rider_payouts")
+          .update({
+            status: "pending",
+            failure_reason: null,
+            next_attempt_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingPayout.id);
+
+        if (retryError) {
+          console.error(
+            "Failed to requeue rider payout:",
+            retryError
+          );
+
+          payoutStatus = "failed";
+          payoutErrorMessage =
+            "Order delivered, but rider payout could not be queued.";
+        } else {
+          payoutStatus = "pending";
+          payoutErrorMessage = null;
+        }
+      }
+    }
+
+    // ============================================================
+    // NO EXISTING PAYOUT
+    // ============================================================
+
+    else {
+      const { data: riderApplication, error: riderError } =
+        await supabase
+          .from("rider_applications")
+          .select(`
+            user_id,
+            status,
+            flutterwave_beneficiary_id
+          `)
+          .eq("user_id", order.rider_id)
+          .eq("status", "active")
+          .maybeSingle();
+
+      let initialFailureReason: string | null = null;
+
+      if (riderError) {
+        console.error(
+          "Rider payout details lookup failed:",
+          riderError
+        );
+
+        initialFailureReason =
+          "Failed to verify rider payout details.";
+      } else if (!riderApplication) {
+        initialFailureReason =
+          "Active rider application not found.";
+      } else if (
+        !riderApplication.flutterwave_beneficiary_id
+      ) {
+        initialFailureReason =
+          "This rider does not have a Flutterwave payout beneficiary.";
+      }
+
+      const {
+        data: payout,
+        error: payoutInsertError,
+      } = await supabase
+        .from("rider_payouts")
+        .insert({
+          rider_id: order.rider_id,
+          order_id: order.id,
+          amount,
+          currency: "NGN",
+          flutterwave_reference: reference,
+          status: "pending",
+          failure_reason: initialFailureReason,
+          next_attempt_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (payoutInsertError || !payout) {
+        console.error(
+          "Payout insert failed:",
+          payoutInsertError
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Order was delivered, but rider payout could not be queued.",
+          },
+          { status: 500 }
+        );
+      }
+
+      payoutStatus = "pending";
+      payoutErrorMessage = initialFailureReason;
+    }
+
+    // ============================================================
     // CUSTOMER NOTIFICATION
     // ============================================================
 
-    const customerTitle =
-      "Order Delivered 🎉";
+    if (!alreadyDelivered) {
+      const customerTitle = "Order Delivered 🎉";
 
-    const customerMessage =
-      "Your food has been delivered. Enjoy your meal!";
+      const customerMessage =
+        "Your food has been delivered. Enjoy your meal!";
 
-    await supabase
-      .from("notifications")
-      .insert({
-        user_id: order.user_id,
-        order_id: order.id,
-        title: customerTitle,
-        message: customerMessage,
-        link: `/orders/${order.id}`,
-      });
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: order.user_id,
+          order_id: order.id,
+          title: customerTitle,
+          message: customerMessage,
+          link: `/orders/${order.id}`,
+        });
 
-    await sendNotification({
-      userId: order.user_id,
-      title: customerTitle,
-      body: customerMessage,
-      data: {
-        orderId: order.id.toString(),
-        type: "order_delivered",
-      },
-    });
+      try {
+        await sendNotification({
+          userId: order.user_id,
+          title: customerTitle,
+          body: customerMessage,
+          data: {
+            orderId: order.id.toString(),
+            type: "order_delivered",
+          },
+        });
+      } catch (notificationError) {
+        console.error(
+          "Customer push notification failed:",
+          notificationError
+        );
+      }
+    }
 
     // ============================================================
     // RESTAURANT NOTIFICATION
     // ============================================================
 
-    const restaurant = Array.isArray(
-      order.restaurants
-    )
-      ? order.restaurants[0]
-      : order.restaurants;
+    if (!alreadyDelivered) {
+      const restaurant = Array.isArray(order.restaurants)
+        ? order.restaurants[0]
+        : order.restaurants;
 
-    if (restaurant?.owner_id) {
-      const restaurantTitle =
-        "Order Delivered 🎉";
+      if (restaurant?.owner_id) {
+        const restaurantTitle = "Order Delivered 🎉";
 
-      const restaurantMessage =
-        `Order #${order.id
-          .toString()
-          .slice(0, 8)} has been delivered successfully.`;
+        const restaurantMessage =
+          `Order #${order.id
+            .toString()
+            .slice(0, 8)} has been delivered successfully.`;
 
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: restaurant.owner_id,
-          order_id: order.id,
-          title: restaurantTitle,
-          message: restaurantMessage,
-          link: `/restaurant/orders/${order.id}`,
-        });
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: restaurant.owner_id,
+            order_id: order.id,
+            title: restaurantTitle,
+            message: restaurantMessage,
+            link: `/restaurant/orders/${order.id}`,
+          });
 
-      await sendNotification({
-        userId: restaurant.owner_id,
-        title: restaurantTitle,
-        body: restaurantMessage,
-        data: {
-          orderId: order.id.toString(),
-          type: "order_delivered",
-        },
-      });
+        try {
+          await sendNotification({
+            userId: restaurant.owner_id,
+            title: restaurantTitle,
+            body: restaurantMessage,
+            data: {
+              orderId: order.id.toString(),
+              type: "order_delivered",
+            },
+          });
+        } catch (notificationError) {
+          console.error(
+            "Restaurant push notification failed:",
+            notificationError
+          );
+        }
+      }
     }
 
     // ============================================================
@@ -659,8 +521,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: alreadyDelivered
-        ? "Rider payout retry processed."
-        : "Order delivered successfully.",
+        ? "Order is already delivered. Rider payout is queued."
+        : "Order delivered successfully. Rider payout is pending.",
       payout: {
         status: payoutStatus,
         error: payoutErrorMessage,

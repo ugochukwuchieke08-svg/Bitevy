@@ -227,10 +227,11 @@ export async function POST(req: Request) {
   const { data: updatedOrder, error: updateError } = await supabase
   .from("orders")
   .update({
-    payment_status: "paid",
-    payment_method: "flutterwave",
-    paid_at: new Date().toISOString(),
-  })
+  payment_status: "paid",
+  payment_method: "flutterwave",
+  payment_transaction_id: String(transaction.id),
+  paid_at: new Date().toISOString(),
+})
   .eq("id", order.id)
   .eq("payment_status", "pending")
   .select("id")

@@ -154,6 +154,8 @@ export async function GET(req: Request) {
         .update({
           payment_status: "paid",
           payment_method: "flutterwave",
+          payment_transaction_id: String(data.data.id),
+          paid_at: new Date().toISOString(),
         })
         .eq("id", order.id);
 
