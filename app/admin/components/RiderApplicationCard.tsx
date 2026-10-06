@@ -1,6 +1,13 @@
 "use client";
 
-import { Bike, CalendarDays, Phone, ShieldCheck } from "lucide-react";
+import {
+  Bike,
+  CalendarDays,
+  Phone,
+  ShieldCheck,
+  RefreshCw,
+} from "lucide-react";
+import { useState } from "react";
 import { RiderApplication } from "../types";
 import RiderStatusBadge from "./RiderStatusBadge";
 
@@ -18,6 +25,8 @@ export default function RiderApplicationCard({
   reviewing,
   onReview,
 }: Props) {
+  const [repairing, setRepairing] = useState(false);
+
   const handleReview = (
     decision: "approve" | "reject"
   ) => {
@@ -37,8 +46,61 @@ export default function RiderApplicationCard({
     onReview(rider.id, decision);
   };
 
+  const handleRepairBeneficiary = async () => {
+    const confirmed = window.confirm(
+      `Repair the Flutterwave beneficiary for ${rider.full_name}?\n\nBitevy will create and verify a new beneficiary using the rider's current bank details.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRepairing(true);
+
+      const response = await fetch(
+        "/api/admin/rider-applications/repair-beneficiary",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            applicationId: rider.id,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Failed to repair rider beneficiary."
+        );
+      }
+
+      window.alert(
+        `Beneficiary repaired successfully.\n\nNew beneficiary: ${data.recipientId}`
+      );
+    } catch (error) {
+      console.error(
+        "Beneficiary repair failed:",
+        error
+      );
+
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to repair rider beneficiary."
+      );
+    } finally {
+      setRepairing(false);
+    }
+  };
+
   return (
-    <article className="overflow-hidden  rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+    <article className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       {/* Header */}
       <div className="flex items-start gap-4 border-b text-gray-600 border-slate-100 p-5 sm:p-6">
         <img
@@ -57,13 +119,13 @@ export default function RiderApplicationCard({
                 {rider.full_name}
               </h3>
 
-              <div className="mt-2 flex items-center gap-2  text-gray-600 text-sm text-slate-500">
+              <div className="mt-2 flex items-center gap-2 text-gray-600 text-sm text-slate-500">
                 <Phone size={15} />
                 <span>{rider.phone}</span>
               </div>
             </div>
 
-            <RiderStatusBadge  status={rider.status} />
+            <RiderStatusBadge status={rider.status} />
           </div>
         </div>
       </div>
@@ -157,8 +219,8 @@ export default function RiderApplicationCard({
             onClick={() =>
               handleReview("approve")
             }
-            disabled={reviewing}
-            className="rounded-2xl  bg-green-600 px-4 py-3 font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={reviewing || repairing}
+            className="rounded-2xl bg-green-600 px-4 py-3 font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {reviewing
               ? "Processing..."
@@ -170,7 +232,7 @@ export default function RiderApplicationCard({
             onClick={() =>
               handleReview("reject")
             }
-            disabled={reviewing}
+            disabled={reviewing || repairing}
             className="rounded-2xl bg-red-600 px-4 py-3 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {reviewing
@@ -179,6 +241,32 @@ export default function RiderApplicationCard({
           </button>
         </div>
       )}
+
+      {/* Beneficiary Repair */}
+      <div className="border-t border-slate-100 p-5 sm:p-6">
+        <button
+          type="button"
+          onClick={handleRepairBeneficiary}
+          disabled={
+            repairing ||
+            reviewing
+          }
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 font-bold text-orange-700 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RefreshCw
+            size={17}
+            className={
+              repairing
+                ? "animate-spin"
+                : ""
+            }
+          />
+
+          {repairing
+            ? "Repairing Beneficiary..."
+            : "Repair Beneficiary"}
+        </button>
+      </div>
     </article>
   );
 }
