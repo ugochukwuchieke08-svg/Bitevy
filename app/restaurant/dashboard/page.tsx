@@ -48,7 +48,8 @@ export default async function RestaurantDashboard() {
     .from("restaurants")
     .select("*")
     .eq("owner_id", user.id)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   console.log("RESTAURANT FROM DATABASE:", restaurant);
   console.log("RESTAURANT QUERY ERROR:", restaurantError);
@@ -104,54 +105,58 @@ export default async function RestaurantDashboard() {
       (order) => order.status === "ready"
     ).length ?? 0;
 
-  const today = new Date().toISOString().split("T")[0];
+  // Use Nigeria's local date so "Revenue Today" doesn't shift around UTC midnight.
+  const lagosDateParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
 
-  const revenueToday =
-    orders
-      ?.filter(
-        (order) =>
-          order.status === "delivered" &&
-          order.created_at.startsWith(today)
-      )
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.restaurant_amount ?? 0),
-        0
-      ) ?? 0;
+  const datePart = (type: string) =>
+    lagosDateParts.find((part) => part.type === type)?.value ?? "";
+
+  const today = `${datePart("year")}-${datePart("month")}-${datePart("day")}`;
+
+  const paidOrders = orders?.filter(
+    (order) => order.payment_status === "paid"
+  ) ?? [];
+
+  const deliveredPaidOrders = paidOrders.filter(
+    (order) => order.status === "delivered"
+  );
+
+  const revenueToday = deliveredPaidOrders
+    .filter((order) => {
+      const orderDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Lagos",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(order.created_at));
+
+      return orderDate === today;
+    })
+    .reduce(
+      (sum, order) => sum + Number(order.restaurant_amount ?? 0),
+      0
+    );
+
+  // Count earnings only from orders that are both paid and delivered.
+  const totalEarnings = deliveredPaidOrders.reduce(
+    (sum, order) => sum + Number(order.restaurant_amount ?? 0),
+    0
+  );
 
   /*
-   * Total restaurant earnings from paid orders.
+   * This page currently queries order payment status, not a restaurant
+   * settlement/payout ledger. Do not label all paid orders as a confirmed
+   * pending payout: that would show a misleading payout balance.
    */
-  const totalEarnings =
-    orders
-      ?.filter(
-        (order) => order.payment_status === "paid"
-      )
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.restaurant_amount ?? 0),
-        0
-      ) ?? 0;
-
-  /*
-   * Current pending payout.
-   *
-   * Restaurant payouts are handled through the payment provider's
-   * settlement system. The current database schema does not contain
-   * a separate restaurant payout/settlement status, so paid
-   * restaurant earnings are treated as the current pending payout
-   * amount shown on the dashboard.
-   */
-  const pendingPayout =
-    orders
-      ?.filter(
-        (order) => order.payment_status === "paid"
-      )
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.restaurant_amount ?? 0),
-        0
-      ) ?? 0;
+  const paidOrderEarnings = paidOrders.reduce(
+    (sum, order) => sum + Number(order.restaurant_amount ?? 0),
+    0
+  );
 
   const totalOrders = orders?.length ?? 0;
 
@@ -301,7 +306,7 @@ export default async function RestaurantDashboard() {
 
           </div>
 
-          {/* PENDING PAYOUT */}
+          {/* PAID ORDER EARNINGS — not a confirmed payout balance */}
           <div className="mt-4 bg-white rounded-3xl p-5 border border-black/5 shadow-sm">
 
             <div className="flex items-start justify-between gap-4">
@@ -316,18 +321,18 @@ export default async function RestaurantDashboard() {
 
                   <div>
                     <p className="text-sm font-semibold text-gray-500">
-                      Pending Payout
+                      Earnings from Paid Orders
                     </p>
 
                     <p className="text-2xl sm:text-3xl font-black text-orange-600 mt-1">
-                      ₦{pendingPayout.toLocaleString()}
+                      ₦{paidOrderEarnings.toLocaleString()}
                     </p>
                   </div>
 
                 </div>
 
                 <p className="text-sm text-gray-500 mt-4">
-                  Pending — usually takes up to 24 hrs
+                  Includes orders marked as paid. Bank settlement status is not confirmed by this figure.
                 </p>
 
               </div>

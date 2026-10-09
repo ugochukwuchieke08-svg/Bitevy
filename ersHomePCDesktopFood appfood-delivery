@@ -1,0 +1,163 @@
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m49[m[36m:[m  const handleRepair[1;31mBeneficiary[m = async () => {
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m51[m[36m:[m      `Repair the [1;31mFlutterwave[m [1;31mbeneficiary[m for ${rider.full_name}?\n\nBitevy will create and verify a new [1;31mbeneficiary[m using the rider's current bank details.`
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m62[m[36m:[m        "/api/admin/rider-applications/repair-[1;31mbeneficiary[m",
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m79[m[36m:[m            "Failed to repair rider [1;31mbeneficiary[m."
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m84[m[36m:[m        `[1;31mBeneficiary[m repaired successfully.\n\nNew [1;31mbeneficiary[m: ${data.recipientId}`
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m88[m[36m:[m        "[1;31mBeneficiary[m repair failed:",
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m95[m[36m:[m          : "Failed to repair rider [1;31mbeneficiary[m."
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m245[m[36m:[m      {/* [1;31mBeneficiary[m Repair */}
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m249[m[36m:[m          onClick={handleRepair[1;31mBeneficiary[m}
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m266[m[36m:[m            ? "Repairing [1;31mBeneficiary[m..."
+[35mapp/admin/components/RiderApplicationCard.tsx[m[36m:[m[32m267[m[36m:[m            : "Repair [1;31mBeneficiary[m"}
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m58[m[36m:[m          [1;31mflutterwave[m_[1;31mbeneficiary[m_id
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m104[m[36m:[m        "[1;31mBeneficiary[m repair creation failed:",
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m112[m[36m:[m            "Failed to create replacement [1;31mFlutterwave[m recipient.",
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m122[m[36m:[m        { error: "[1;31mFlutterwave[m returned an invalid recipient ID." },
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m131[m[36m:[m        [1;31mflutterwave[m_[1;31mbeneficiary[m_id: recipientId,
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m137[m[36m:[m        "Failed to save replacement [1;31mbeneficiary[m:",
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m152[m[36m:[m      message: "Rider [1;31mFlutterwave[m [1;31mbeneficiary[m repaired.",
+[35mapp/api/admin/rider-applications/repair-beneficiary/route.ts[m[36m:[m[32m159[m[36m:[m      "[1;31mBeneficiary[m repair error:",
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m100[m[36m:[m    // Create [1;31mFlutterwave[m payout [1;31mbeneficiary[m
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m101[m[36m:[mlet [1;31mflutterwave[m[1;31mBeneficiary[mId: string | null = null;
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m144[m[36m:[m        "Failed to create [1;31mFlutterwave[m payout recipient.",
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m150[m[36m:[m[1;31mflutterwave[m[1;31mBeneficiary[mId = String(payoutData.recipientId);
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m152[m[36m:[mif (![1;31mflutterwave[m[1;31mBeneficiary[mId.startsWith("rcb_")) {
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m154[m[36m:[m    "INVALID [1;31mFLUTTERWAVE[m V4 RECIPIENT ID:",
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m155[m[36m:[m    [1;31mflutterwave[m[1;31mBeneficiary[mId
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m160[m[36m:[m      error: "Invalid [1;31mFlutterwave[m V4 recipient ID.",
+[35mapp/api/admin/rider-applications/review/route.ts[m[36m:[m[32m179[m[36m:[m          [1;31mflutterwave[m_[1;31mbeneficiary[m_id: [1;31mflutterwave[m[1;31mBeneficiary[mId,
+[35mapp/api/flutterwave/banks/route.ts[m[36m:[m[32m13[m[36m:[m          message: "[1;31mFlutterwave[m configuration is missing.",
+[35mapp/api/flutterwave/banks/route.ts[m[36m:[m[32m20[m[36m:[m      "https://api.[1;31mflutterwave[m.com/v3/banks/NG",
+[35mapp/api/flutterwave/banks/route.ts[m[36m:[m[32m33[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m BANKS RESPONSE:", {
+[35mapp/api/flutterwave/banks/route.ts[m[36m:[m[32m45[m[36m:[m            "[1;31mFlutterwave[m could not load the banks.",
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m17[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m CALLBACK:", {
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m49[m[36m:[m    // VERIFY PAYMENT WITH [1;31mFLUTTERWAVE[m
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m53[m[36m:[m      `https://api.[1;31mflutterwave[m.com/v3/transactions/${transactionId}/verify`,
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m65[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m VERIFICATION:", data);
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m138[m[36m:[m        [1;31mflutterwave[mTxRef: data.data?.tx_ref,
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m156[m[36m:[m          payment_method: "[1;31mflutterwave[m",
+[35mapp/api/flutterwave/callback/route.ts[m[36m:[m[32m186[m[36m:[m      "[1;31mFlutterwave[m callback error:",
+[35mapp/api/flutterwave/create-subaccount/route.ts[m[36m:[m[32m41[m[36m:[m      "https://api.[1;31mflutterwave[m.com/v3/subaccounts",
+[35mapp/api/flutterwave/create-subaccount/route.ts[m[36m:[m[32m68[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m SUBACCOUNT RESPONSE:", data);
+[35mapp/api/flutterwave/create-subaccount/route.ts[m[36m:[m[32m75[m[36m:[m            data.message || "Unable to create [1;31mFlutterwave[m subaccount.",
+[35mapp/api/flutterwave/create-subaccount/route.ts[m[36m:[m[32m84[m[36m:[m      [1;31mflutterwave[mId: data.data.id,
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m111[m[36m:[m  .select("id, [1;31mflutterwave[m_subaccount_id, payout_status")
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m130[m[36m:[m  typeof restaurant.[1;31mflutterwave[m_subaccount_id !== "string" ||
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m131[m[36m:[m  !restaurant.[1;31mflutterwave[m_subaccount_id.trim() ||
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m193[m[36m:[m      "https://api.[1;31mflutterwave[m.com/v3/payments",
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m205[m[36m:[m          redirect_url: `${baseUrl}/payment/[1;31mflutterwave[m/callback`,
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m215[m[36m:[m              id: restaurant.[1;31mflutterwave[m_subaccount_id,
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m235[m[36m:[m    console.log("[1;31mFlutterwave[m response:", data);
+[35mapp/api/flutterwave/initiate/route.ts[m[36m:[m[32m253[m[36m:[m    console.error("[1;31mFlutterwave[m initiation error:", err);
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m99[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m101[m[36m:[m          "id, status, [1;31mflutterwave[m_reference, [1;31mflutterwave[m_transfer_id"
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m133[m[36m:[m    // 9. Get rider [1;31mFlutterwave[m [1;31mbeneficiary[m
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m140[m[36m:[m          [1;31mflutterwave[m_[1;31mbeneficiary[m_id
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m162[m[36m:[m    if (!riderApplication.[1;31mflutterwave[m_[1;31mbeneficiary[m_id) {
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m166[m[36m:[m            "This rider does not have a [1;31mFlutterwave[m payout [1;31mbeneficiary[m.",
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m172[m[36m:[m    // 10. Make sure [1;31mFlutterwave[m secret exists
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m179[m[36m:[m        { error: "[1;31mFlutterwave[m configuration error." },
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m190[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m196[m[36m:[m          [1;31mflutterwave[m_reference: reference,
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m217[m[36m:[m    // 13. Initiate [1;31mFlutterwave[m transfer
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m218[m[36m:[m    const [1;31mflutterwave[mResponse = await fetch(
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m219[m[36m:[m      "https://api.[1;31mflutterwave[m.com/v3/transfers",
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m227[m[36m:[m          [1;31mbeneficiary[m: Number(
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m228[m[36m:[m            riderApplication.[1;31mflutterwave[m_[1;31mbeneficiary[m_id
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m239[m[36m:[m    const [1;31mflutterwave[mData = await [1;31mflutterwave[mResponse.json();
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m241[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m RIDER PAYOUT RESPONSE:", {
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m242[m[36m:[m      status: [1;31mflutterwave[mResponse.status,
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m243[m[36m:[m      data: [1;31mflutterwave[mData,
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m246[m[36m:[m    // 14. [1;31mFlutterwave[m rejected the transfer
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m248[m[36m:[m      ![1;31mflutterwave[mResponse.ok ||
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m249[m[36m:[m      [1;31mflutterwave[mData.status !== "success"
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m252[m[36m:[m        [1;31mflutterwave[mData.message ||
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m253[m[36m:[m        "[1;31mFlutterwave[m transfer failed.";
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m256[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m272[m[36m:[m    // 15. Save [1;31mFlutterwave[m transfer ID
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m273[m[36m:[m    const transferId = [1;31mflutterwave[mData.data?.id
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m274[m[36m:[m      ? String([1;31mflutterwave[mData.data.id)
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m278[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m280[m[36m:[m        [1;31mflutterwave[m_transfer_id: transferId,
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m296[m[36m:[m        [1;31mflutterwave[mTransferId: transferId,
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m48[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m54[m[36m:[m          [1;31mflutterwave[m_transfer_id,
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m55[m[36m:[m          [1;31mflutterwave[m_reference
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m67[m[36m:[m    if (!payout.[1;31mflutterwave[m_transfer_id) {
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m71[m[36m:[m            "This payout does not have a [1;31mFlutterwave[m transfer ID.",
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m81[m[36m:[m        { error: "[1;31mFlutterwave[m configuration error." },
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m86[m[36m:[m    // 4. Ask [1;31mFlutterwave[m for the transfer status
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m88[m[36m:[m      `https://api.[1;31mflutterwave[m.com/v3/transfers/${payout.[1;31mflutterwave[m_transfer_id}`,
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m100[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m TRANSFER VERIFICATION:", {
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m110[m[36m:[m            "Unable to verify [1;31mFlutterwave[m transfer.",
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m137[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m144[m[36m:[m              "[1;31mFlutterwave[m transfer failed."
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m167[m[36m:[m      [1;31mflutterwave[mStatus: transferStatus,
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m33[m[36m:[m          message: "[1;31mFlutterwave[m configuration is missing.",
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m45[m[36m:[m      "https://api.[1;31mflutterwave[m.com/v3/accounts/resolve",
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m61[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m ACCOUNT VERIFY RESPONSE:", {
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m67[m[36m:[m  console.error("[1;31mFLUTTERWAVE[m RAW ERROR:", JSON.stringify(data, null, 2));
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m72[m[36m:[m      message: data.message || "[1;31mFlutterwave[m rejected the account verification.",
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m73[m[36m:[m      [1;31mflutterwave[mResponse: data,
+[35mapp/api/flutterwave/resolve-account/route.ts[m[36m:[m[32m85[m[36m:[m    console.error("[1;31mFLUTTERWAVE[m ACCOUNT RESOLUTION ERROR:", error);
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m49[m[36m:[m    // Find the Bitevy order using [1;31mFlutterwave[m's transaction reference
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m90[m[36m:[m    // Ask [1;31mFlutterwave[m directly about the transaction
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m92[m[36m:[m      `https://api.[1;31mflutterwave[m.com/v3/transactions/${transactionId}/verify`,
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m104[m[36m:[m    console.log("[1;31mFlutterwave[m verification response:", data);
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m156[m[36m:[m    // Make sure the [1;31mFlutterwave[m reference belongs to this order
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m190[m[36m:[m        [1;31mflutterwave[mAmount: transaction.amount,
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m231[m[36m:[m  payment_method: "[1;31mflutterwave[m",
+[35mapp/api/flutterwave/verify/route.ts[m[36m:[m[32m323[m[36m:[m    console.error("[1;31mFlutterwave[m verification error:", error);
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m19[m[36m:[m    // Verify [1;31mFlutterwave[m webhook signature
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m23[m[36m:[m      console.error("INVALID [1;31mFLUTTERWAVE[m WEBHOOK SIGNATURE");
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m33[m[36m:[m    console.log("[1;31mFLUTTERWAVE[m WEBHOOK:", payload);
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m49[m[36m:[m      // Re-verify the transaction directly with [1;31mFlutterwave[m
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m51[m[36m:[m        `https://api.[1;31mflutterwave[m.com/v3/transactions/${transactionId}/verify`,
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m64[m[36m:[m        "[1;31mFLUTTERWAVE[m WEBHOOK RE-VERIFICATION:",
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m126[m[36m:[m        [1;31mflutterwave[mAmount: verifiedTransaction.amount,
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m152[m[36m:[m    payment_method: "[1;31mflutterwave[m",
+[35mapp/api/flutterwave/webhook/route.ts[m[36m:[m[32m214[m[36m:[m    console.error("[1;31mFLUTTERWAVE[m WEBHOOK ERROR:", error);
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m176[m[36m:[m    // SHORT [1;31mFLUTTERWAVE[m REFERENCE
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m179[m[36m:[m    // [1;31mFlutterwave[m references must stay within their length limit.
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m196[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m200[m[36m:[m        [1;31mflutterwave[m_reference,
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m201[m[36m:[m        [1;31mflutterwave[m_transfer_id,
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m226[m[36m:[m    // Delivery must never depend on [1;31mFlutterwave[m payout.
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m274[m[36m:[m    // The DigitalOcean worker handles [1;31mFlutterwave[m transfers.
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m278[m[36m:[m    let [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m291[m[36m:[m        [1;31mpayoutS[mtatus = "paid";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m300[m[36m:[m        [1;31mpayoutS[mtatus = "processing";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m309[m[36m:[m        [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m313[m[36m:[m          .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m334[m[36m:[m          .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m349[m[36m:[m          [1;31mpayoutS[mtatus = "failed";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m353[m[36m:[m          [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m370[m[36m:[m            [1;31mflutterwave[m_[1;31mbeneficiary[m_id
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m390[m[36m:[m        !riderApplication.[1;31mflutterwave[m_[1;31mbeneficiary[m_id
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m393[m[36m:[m          "This rider does not have a [1;31mFlutterwave[m payout [1;31mbeneficiary[m.";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m400[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m406[m[36m:[m          [1;31mflutterwave[m_reference: reference,
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m429[m[36m:[m      [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m527[m[36m:[m        status: [1;31mpayoutS[mtatus,
+[35mapp/checkout/page.tsx[m[36m:[m[32m232[m[36m:[m    const payment = await fetch("/api/[1;31mflutterwave[m/initiate", {
+[35mapp/payment/flutterwave/callback/page.tsx[m[36m:[m[32m7[m[36m:[mexport default function [1;31mFlutterwave[mCallbackPage() {
+[35mapp/payment/flutterwave/callback/page.tsx[m[36m:[m[32m19[m[36m:[m      console.log("========== [1;31mFLUTTERWAVE[m CALLBACK ==========");
+[35mapp/payment/flutterwave/callback/page.tsx[m[36m:[m[32m33[m[36m:[m        const response = await fetch("/api/[1;31mflutterwave[m/verify", {
+[35mapp/rider/page.tsx[m[36m:[m[32m120[m[36m:[m  .from("rider_[1;31mpayouts[m")
+[35mapp/rider/page.tsx[m[36m:[m[32m125[m[36m:[m  console.error("Failed to load rider [1;31mpayouts[m:", payoutError);
+[35mapp/rider/page.tsx[m[36m:[m[32m127[m[36m:[m  // Only completed [1;31mpayouts[m count as earnings.
+[35mapp/rider/page.tsx[m[36m:[m[32m128[m[36m:[m  const successful[1;31mPayouts[m = (payoutRecords || []).filter(
+[35mapp/rider/page.tsx[m[36m:[m[32m132[m[36m:[m  const total = successful[1;31mPayouts[m.reduce(
+[35mapp/rider/page.tsx[m[36m:[m[32m141[m[36m:[m  const todayTotal = successful[1;31mPayouts[m
+[35mapp/rider/page.tsx[m[36m:[m[32m231[m[36m:[m  .from("rider_[1;31mpayouts[m")
+[35mapp/rider/page.tsx[m[36m:[m[32m236[m[36m:[m  console.error("Failed to refresh rider [1;31mpayouts[m:", payoutError);
+[35mapp/rider/page.tsx[m[36m:[m[32m240[m[36m:[mconst successful[1;31mPayouts[m = (payoutRecords || []).filter(
+[35mapp/rider/page.tsx[m[36m:[m[32m244[m[36m:[mconst total = successful[1;31mPayouts[m.reduce(
+[35mapp/rider/page.tsx[m[36m:[m[32m253[m[36m:[mconst todayTotal = successful[1;31mPayouts[m
+[35mapp/rider/page.tsx[m[36m:[m[32m529[m[36m:[m    Being processed by [1;31mFlutterwave[m
+[35mapp/signup/restaurantsignup/page.tsx[m[36m:[m[32m87[m[36m:[m        const response = await fetch("/api/[1;31mflutterwave[m/banks");
+[35mapp/signup/restaurantsignup/page.tsx[m[36m:[m[32m261[m[36m:[m          "/api/[1;31mflutterwave[m/create-subaccount",
+[35mapp/signup/restaurantsignup/page.tsx[m[36m:[m[32m303[m[36m:[m            [1;31mflutterwave[m_subaccount_id:
+[35mapp/signup/restaurantsignup/page.tsx[m[36m:[m[32m689[m[36m:[m                      "/api/[1;31mflutterwave[m/resolve-account",
+[35mapp/signup/rider/page.tsx[m[36m:[m[32m98[m[36m:[m          "/api/[1;31mflutterwave[m/banks"
+[35mapp/signup/rider/page.tsx[m[36m:[m[32m190[m[36m:[m        "/api/[1;31mflutterwave[m/resolve-account",

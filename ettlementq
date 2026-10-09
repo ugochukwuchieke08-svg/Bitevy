@@ -1,0 +1,29 @@
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m99[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m190[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m256[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/route.ts[m[36m:[m[32m278[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m48[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/flutterwave/payout/rider/verify/route.ts[m[36m:[m[32m137[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m196[m[36m:[m      .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m278[m[36m:[m    let [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m291[m[36m:[m        [1;31mpayoutS[mtatus = "paid";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m300[m[36m:[m        [1;31mpayoutS[mtatus = "processing";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m309[m[36m:[m        [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m313[m[36m:[m          .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m334[m[36m:[m          .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m349[m[36m:[m          [1;31mpayoutS[mtatus = "failed";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m353[m[36m:[m          [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m400[m[36m:[m        .from("rider_[1;31mpayouts[m")
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m429[m[36m:[m      [1;31mpayoutS[mtatus = "pending";
+[35mapp/api/rider/deliver/route.ts[m[36m:[m[32m527[m[36m:[m        status: [1;31mpayoutS[mtatus,
+[35mapp/rider/page.tsx[m[36m:[m[32m120[m[36m:[m  .from("rider_[1;31mpayouts[m")
+[35mapp/rider/page.tsx[m[36m:[m[32m125[m[36m:[m  console.error("Failed to load rider [1;31mpayouts[m:", payoutError);
+[35mapp/rider/page.tsx[m[36m:[m[32m127[m[36m:[m  // Only completed [1;31mpayouts[m count as earnings.
+[35mapp/rider/page.tsx[m[36m:[m[32m128[m[36m:[m  const successful[1;31mPayouts[m = (payoutRecords || []).filter(
+[35mapp/rider/page.tsx[m[36m:[m[32m132[m[36m:[m  const total = successful[1;31mPayouts[m.reduce(
+[35mapp/rider/page.tsx[m[36m:[m[32m141[m[36m:[m  const todayTotal = successful[1;31mPayouts[m
+[35mapp/rider/page.tsx[m[36m:[m[32m231[m[36m:[m  .from("rider_[1;31mpayouts[m")
+[35mapp/rider/page.tsx[m[36m:[m[32m236[m[36m:[m  console.error("Failed to refresh rider [1;31mpayouts[m:", payoutError);
+[35mapp/rider/page.tsx[m[36m:[m[32m240[m[36m:[mconst successful[1;31mPayouts[m = (payoutRecords || []).filter(
+[35mapp/rider/page.tsx[m[36m:[m[32m244[m[36m:[mconst total = successful[1;31mPayouts[m.reduce(
+[35mapp/rider/page.tsx[m[36m:[m[32m253[m[36m:[mconst todayTotal = successful[1;31mPayouts[m
