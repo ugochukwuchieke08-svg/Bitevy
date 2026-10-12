@@ -1,9 +1,12 @@
+
 import Link from "next/link";
+import { headers } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import RestaurantOpenToggle from "@/components/RestaurantOpenToggle";
 import {
   ArrowLeft,
   ArrowRight,
+  Banknote,
   Bike,
   Clock3,
   Edit3,
@@ -13,6 +16,12 @@ import {
   Utensils,
   Wallet,
 } from "lucide-react";
+
+type SettlementEarnings = {
+  revenueToday: number;
+  totalEarnings: number;
+  pendingPayout: number;
+};
 
 export default async function RestaurantDashboard() {
   const supabase = await createServerSupabaseClient();
@@ -58,7 +67,6 @@ export default async function RestaurantDashboard() {
     return (
       <main className="min-h-screen bg-[#fff8f0] flex items-center justify-center px-6">
         <div className="w-full max-w-md bg-white rounded-3xl p-8 text-center shadow-sm border border-black/5">
-
           <div className="mx-auto w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center">
             <Utensils className="w-8 h-8 text-orange-500" />
           </div>
@@ -79,94 +87,111 @@ export default async function RestaurantDashboard() {
             Register Restaurant
             <ArrowRight className="w-4 h-4" />
           </Link>
-
         </div>
       </main>
     );
   }
 
+  // Fetch existing order statistics.
   const { data: orders } = await supabase
     .from("orders")
     .select("status, created_at, restaurant_amount, payment_status")
     .eq("restaurant_id", restaurant.id);
 
   const pendingOrders =
-    orders?.filter(
-      (order) => order.status === "pending"
-    ).length ?? 0;
+    orders?.filter((order) => order.status === "pending").length ?? 0;
 
   const preparingOrders =
-    orders?.filter(
-      (order) => order.status === "preparing"
-    ).length ?? 0;
+    orders?.filter((order) => order.status === "preparing").length ?? 0;
 
   const readyOrders =
-    orders?.filter(
-      (order) => order.status === "ready"
-    ).length ?? 0;
-
-  // Use Nigeria's local date so "Revenue Today" doesn't shift around UTC midnight.
-  const lagosDateParts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Lagos",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const datePart = (type: string) =>
-    lagosDateParts.find((part) => part.type === type)?.value ?? "";
-
-  const today = `${datePart("year")}-${datePart("month")}-${datePart("day")}`;
-
-  const paidOrders = orders?.filter(
-    (order) => order.payment_status === "paid"
-  ) ?? [];
-
-  const deliveredPaidOrders = paidOrders.filter(
-    (order) => order.status === "delivered"
-  );
-
-  const revenueToday = deliveredPaidOrders
-    .filter((order) => {
-      const orderDate = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Africa/Lagos",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date(order.created_at));
-
-      return orderDate === today;
-    })
-    .reduce(
-      (sum, order) => sum + Number(order.restaurant_amount ?? 0),
-      0
-    );
-
-  // Count earnings only from orders that are both paid and delivered.
-  const totalEarnings = deliveredPaidOrders.reduce(
-    (sum, order) => sum + Number(order.restaurant_amount ?? 0),
-    0
-  );
-
-  /*
-   * This page currently queries order payment status, not a restaurant
-   * settlement/payout ledger. Do not label all paid orders as a confirmed
-   * pending payout: that would show a misleading payout balance.
-   */
-  const paidOrderEarnings = paidOrders.reduce(
-    (sum, order) => sum + Number(order.restaurant_amount ?? 0),
-    0
-  );
+    orders?.filter((order) => order.status === "ready").length ?? 0;
 
   const totalOrders = orders?.length ?? 0;
 
+  // Fetch real settlement figures through the authenticated API.
+  let earnings: SettlementEarnings | null = null;
+
+  try {
+    const incomingHeaders = await headers();
+    const cookieHeader = incomingHeaders.get("cookie") ?? "";
+    const host =
+      incomingHeaders.get("x-forwarded-host") ??
+      incomingHeaders.get("host");
+
+    const forwardedProtocol =
+      incomingHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim();
+
+    const isLocalHost =
+      host?.startsWith("localhost:") ||
+      host?.startsWith("127.0.0.1:");
+
+    const protocol =
+      forwardedProtocol ?? (isLocalHost ? "http" : "https");
+
+    if (!host) {
+      throw new Error("Unable to determine the dashboard host.");
+    }
+
+    const settlementResponse = await fetch(
+      `${protocol}://${host}/api/restaurant/settlements`,
+      {
+        headers: {
+          cookie: cookieHeader,
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!settlementResponse.ok) {
+      throw new Error(
+        `Settlement API returned status ${settlementResponse.status}`
+      );
+    }
+
+    const settlementData = await settlementResponse.json();
+
+    if (
+      settlementData.success &&
+      settlementData.earnings &&
+      typeof settlementData.earnings.revenueToday === "number" &&
+      typeof settlementData.earnings.totalEarnings === "number" &&
+      typeof settlementData.earnings.pendingPayout === "number"
+    ) {
+      earnings = {
+        revenueToday: settlementData.earnings.revenueToday,
+        totalEarnings: settlementData.earnings.totalEarnings,
+        pendingPayout: settlementData.earnings.pendingPayout,
+      };
+    } else {
+      throw new Error("Settlement API returned invalid earnings data.");
+    }
+  } catch (settlementFetchError) {
+    console.error(
+      "Failed to fetch restaurant settlements:",
+      settlementFetchError
+    );
+  }
+
+  const formatMoney = (amount: number) =>
+    `₦${amount.toLocaleString("en-NG", {
+      maximumFractionDigits: 2,
+    })}`;
+
+  const revenueToday =
+    earnings === null ? "Unavailable" : formatMoney(earnings.revenueToday);
+
+  const totalEarnings =
+    earnings === null ? "Unavailable" : formatMoney(earnings.totalEarnings);
+
+  const pendingPayout =
+    earnings === null ? "Unavailable" : formatMoney(earnings.pendingPayout);
+
   return (
     <main className="min-h-screen bg-[#fff8f0] text-black">
-
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-black/5">
         <div className="max-w-6xl mx-auto h-16 px-5 flex items-center justify-between">
-
           <Link
             href="/account"
             className="flex items-center gap-2 text-gray-600 hover:text-black transition"
@@ -181,16 +206,13 @@ export default async function RestaurantDashboard() {
           </h1>
 
           <div className="w-9 sm:w-[75px]" />
-
         </div>
       </header>
 
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-5 py-7 sm:py-10">
-
         {/* RESTAURANT HERO */}
         <section className="relative overflow-hidden rounded-[2rem] bg-black shadow-xl">
-
           <img
             src={restaurant.image}
             alt={restaurant.name}
@@ -200,9 +222,7 @@ export default async function RestaurantDashboard() {
           <div className="absolute inset-0 bg-black/25" />
 
           <div className="relative min-h-[300px] sm:min-h-[340px] p-6 sm:p-9 flex flex-col justify-end">
-
             <div className="max-w-2xl">
-
               <RestaurantOpenToggle
                 restaurantId={restaurant.id}
                 initialIsOpen={restaurant.is_open ?? true}
@@ -219,7 +239,6 @@ export default async function RestaurantDashboard() {
 
               {/* RESTAURANT INFO */}
               <div className="flex flex-wrap gap-3 mt-6">
-
                 <InfoPill
                   icon={<Star className="w-4 h-4" />}
                   text={`${restaurant.rating ?? "—"} rating`}
@@ -234,18 +253,13 @@ export default async function RestaurantDashboard() {
                   icon={<Bike className="w-4 h-4" />}
                   text={restaurant.delivery ?? "Delivery unavailable"}
                 />
-
               </div>
-
             </div>
-
           </div>
-
         </section>
 
         {/* OVERVIEW */}
         <section className="mt-8">
-
           <div className="flex items-end justify-between mb-4">
             <div>
               <p className="text-sm font-bold text-orange-600 uppercase tracking-wider">
@@ -262,8 +276,7 @@ export default async function RestaurantDashboard() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
             <StatCard
               label="New Orders"
               value={pendingOrders}
@@ -290,7 +303,7 @@ export default async function RestaurantDashboard() {
 
             <StatCard
               label="Revenue Today"
-              value={`₦${revenueToday.toLocaleString()}`}
+              value={revenueToday}
               icon={<Wallet className="w-5 h-5" />}
               iconClass="bg-purple-50 text-purple-600"
               valueClass="text-black"
@@ -298,54 +311,52 @@ export default async function RestaurantDashboard() {
 
             <StatCard
               label="Total Earnings"
-              value={`₦${totalEarnings.toLocaleString()}`}
+              value={totalEarnings}
               icon={<Wallet className="w-5 h-5" />}
               iconClass="bg-green-50 text-green-600"
               valueClass="text-green-600"
             />
 
+            <StatCard
+              label="Pending Payout"
+              value={pendingPayout}
+              icon={<Banknote className="w-5 h-5" />}
+              iconClass="bg-orange-50 text-orange-600"
+              valueClass="text-orange-600"
+            />
           </div>
 
-          {/* PAID ORDER EARNINGS — not a confirmed payout balance */}
           <div className="mt-4 bg-white rounded-3xl p-5 border border-black/5 shadow-sm">
-
-            <div className="flex items-start justify-between gap-4">
-
-              <div>
-
-                <div className="flex items-center gap-2">
-
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                    <Wallet className="w-5 h-5" />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-500">
-                      Earnings from Paid Orders
-                    </p>
-
-                    <p className="text-2xl sm:text-3xl font-black text-orange-600 mt-1">
-                      ₦{paidOrderEarnings.toLocaleString()}
-                    </p>
-                  </div>
-
-                </div>
-
-                <p className="text-sm text-gray-500 mt-4">
-                  Includes orders marked as paid. Bank settlement status is not confirmed by this figure.
-                </p>
-
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 shrink-0 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                <Wallet className="w-5 h-5" />
               </div>
 
+              <div>
+                <p className="font-bold text-black">
+                  Restaurant settlement summary
+                </p>
+
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                  Revenue Today shows settlements processed today. Total
+                  Earnings shows successful settlements retrieved by Bitevy.
+                  Pending Payout estimates paid orders that have not yet
+                  matched a successful settlement.
+                </p>
+
+                {earnings === null && (
+                  <p className="text-sm font-semibold text-red-600 mt-3">
+                    Settlement information is temporarily unavailable. Your
+                    order statistics are still available.
+                  </p>
+                )}
+              </div>
             </div>
-
           </div>
-
         </section>
 
         {/* QUICK ACTIONS */}
         <section className="mt-10">
-
           <div className="mb-4">
             <p className="text-sm font-bold text-orange-600 uppercase tracking-wider">
               Manage
@@ -361,7 +372,6 @@ export default async function RestaurantDashboard() {
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
-
             <ActionCard
               href="/restaurant/orders"
               icon={<ShoppingBag className="w-6 h-6" />}
@@ -391,23 +401,17 @@ export default async function RestaurantDashboard() {
               iconClass="bg-gray-100 text-gray-700"
               descriptionClass="text-gray-500"
             />
-
           </div>
-
         </section>
 
         {/* ORDER CTA */}
         <section className="mt-10">
-
           <Link
             href="/restaurant/orders"
             className="group block bg-orange-500 hover:bg-orange-600 rounded-3xl p-6 sm:p-7 transition-all duration-200 shadow-sm hover:shadow-lg"
           >
-
             <div className="flex items-center justify-between gap-5">
-
               <div>
-
                 <div className="flex items-center gap-2 text-white/80 text-sm font-bold">
                   <ShoppingBag className="w-4 h-4" />
                   Orders
@@ -424,23 +428,15 @@ export default async function RestaurantDashboard() {
                 <p className="text-white/70 text-sm mt-1">
                   Tap to open your order management page.
                 </p>
-
               </div>
 
               <div className="shrink-0 w-12 h-12 rounded-full bg-white flex items-center justify-center group-hover:translate-x-1 transition-transform">
-
                 <ArrowRight className="w-5 h-5 text-orange-500" />
-
               </div>
-
             </div>
-
           </Link>
-
         </section>
-
       </div>
-
     </main>
   );
 }
@@ -459,9 +455,7 @@ function InfoPill({
   return (
     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-3.5 py-2 text-sm text-white">
       {icon}
-      <span className="font-semibold">
-        {text}
-      </span>
+      <span className="font-semibold">{text}</span>
     </div>
   );
 }
@@ -485,15 +479,12 @@ function StatCard({
 }) {
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-black/5 shadow-sm">
-
       <div className="flex items-start justify-between gap-2">
-
         <div
           className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconClass}`}
         >
           {icon}
         </div>
-
       </div>
 
       <p className="text-xs sm:text-sm font-semibold text-gray-400 mt-5">
@@ -505,7 +496,6 @@ function StatCard({
       >
         {value}
       </p>
-
     </div>
   );
 }
@@ -536,7 +526,6 @@ function ActionCard({
       href={href}
       className={`group rounded-3xl p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${className}`}
     >
-
       <div
         className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconClass}`}
       >
@@ -544,28 +533,18 @@ function ActionCard({
       </div>
 
       <div className="flex items-end justify-between gap-4 mt-7">
-
         <div>
-
-          <h3 className="text-xl font-black">
-            {title}
-          </h3>
+          <h3 className="text-xl font-black">{title}</h3>
 
           <p className={`text-sm mt-1 ${descriptionClass}`}>
             {description}
           </p>
-
         </div>
 
         <div className="w-9 h-9 rounded-full border border-current/10 flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
-
           <ArrowRight className="w-4 h-4" />
-
         </div>
-
       </div>
-
     </Link>
   );
 }
-
