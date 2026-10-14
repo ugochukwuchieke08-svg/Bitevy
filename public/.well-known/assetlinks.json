@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "co.median.android.rdozoxd",
+      "sha256_cert_fingerprints": [
+        "0A:BB:78:24:48:24:2B:59:2B:27:BB:95:EC:69:83:95:38:73:07:C1:01:AB:7F:3F:2D:52:B3:08:4C:1F:85:06"
+      ]
+    }
+  }
+]
