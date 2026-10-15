@@ -326,9 +326,9 @@ export default function SearchPage() {
       </div>
 
       
-{/* Bottom navigation */}
+{/* Bottom navigation */}  
 <div className="shrink-0">
-  <BottomNav />
+  <BottomNav />  
 </div>
 
 
