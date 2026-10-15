@@ -114,7 +114,7 @@ export default async function Home() {
   });
   return (
    <RedirectIfNotLoggedIn>
-   <main className="min-h-screen bg-[#fff8f0] pb-24 md:flex md:h-screen md:flex-col md:overflow-hidden md:pb-0">
+  <main className="flex min-h-screen flex-col bg-[#fff8f0] pb-24 md:h-screen md:min-h-0 md:overflow-hidden md:pb-0">
 
       {/* Top App Bar */}
       <header className="sticky top-0 z-50 shrink-0 bg-[#fff8f0]/95 px-5 py-3 backdrop-blur md:relative md:px-8 lg:px-12">
@@ -141,7 +141,7 @@ export default async function Home() {
       </header>
 
       {/* Content + desktop sidebar */}
-     <div className="mx-auto w-full max-w-7xl flex-1 min-h-0 px-2 md:px-8 lg:px-12">
+     <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 px-2 md:px-8 lg:px-12">
   <div className="flex h-full min-h-0 w-full gap-8">
         {/* MAIN CONTENT */}
   <div className="min-w-0 flex-1 overflow-y-auto pr-2 scrollbar-hide">
@@ -462,9 +462,9 @@ export default async function Home() {
 
 
       {/* Bottom Navigation: mobile-only tab bar, hidden on desktop */}
-      <div className="md:hidden">
-        <BottomNav />
-      </div>
+      <div className="shrink-0">
+      <BottomNav />
+    </div>
 
 
     </main>
