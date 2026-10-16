@@ -7,6 +7,7 @@ import {
   Package,
   Heart,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 
 import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
@@ -305,8 +306,22 @@ export default async function Home() {
             </div>
 
           </section>
+         
+
+          {/* Mobile Contact Us button */}
+          <div className="mt-8 mb-4 flex justify-center md:hidden">
+            <Link
+              href="/contact"
+              className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 font-semibold text-orange-600 shadow-sm"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Contact Us
+            </Link>
+          </div>
 
         </div>
+
+         
 
         {/* Desktop-only profile sidebar, pulled from /account */}
         <aside className="hidden min-h-0 w-72 shrink-0 overflow-y-auto pr-1 md:block lg:w-80">
@@ -451,9 +466,27 @@ export default async function Home() {
                 </span>
               </Link>
 
+              <Link
+  href="/contact"
+  className="flex items-center justify-between border-t border-gray-100 p-4 hover:bg-orange-50"
+>
+  <div className="flex items-center gap-3">
+    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
+      <MessageCircle className="h-5 w-5 text-orange-600" />
+    </div>
+    <span className="text-sm font-semibold text-gray-700">
+      Contact Us
+    </span>
+  </div>
+  <ChevronRight className="h-5 w-5 text-gray-400" />
+</Link>
+
+
             </div>
 
           </div>
+
+          
           
         </aside>
 
