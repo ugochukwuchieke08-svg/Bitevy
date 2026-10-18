@@ -1,12 +1,16 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import RestaurantCard from "@/components/RestaurantCard";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function FavoritesPage() {
   const { user } = useAuth();
+  const router = useRouter();
 
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +82,14 @@ export default function FavoritesPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fff8f0] px-5 pb-28">
         <div className="mx-auto w-full max-w-md text-center">
+          <button
+            onClick={() => router.push("/account")}
+            aria-label="Back to account"
+            className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-gray-800 shadow-sm transition hover:bg-orange-50 active:scale-95"
+          >
+            <ArrowLeft size={21} />
+          </button>
+
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-3xl">
             ❤️
           </div>
@@ -101,6 +113,14 @@ export default function FavoritesPage() {
     <main className="min-h-screen bg-[#fff8f0] px-4 py-5 pb-28 sm:px-6 sm:py-7 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-5 sm:mb-7">
+          <button
+            onClick={() => router.push("/account")}
+            aria-label="Back to profile"
+            className="mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-orange-100 bg-white text-gray-800 shadow-sm transition hover:bg-orange-50 active:scale-95"
+          >
+            <ArrowLeft size={21} />
+          </button>
+
           <h1 className="text-2xl font-black tracking-tight text-black sm:text-3xl">
             Favorites
           </h1>

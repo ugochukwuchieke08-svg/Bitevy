@@ -156,7 +156,7 @@ async function saveLocation() {
       throw error;
     }
 
-    router.push("/");
+    router.push("/home");
      router.refresh();
 
   } catch (error) {
